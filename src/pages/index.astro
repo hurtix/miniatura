@@ -1,17 +1,172 @@
 ---
-
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Miniatura - Astro + Shadcn/UI">
+  <main class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="text-5xl font-bold tracking-tight text-foreground mb-4">
+        ¡Bienvenido a Miniatura!
+      </h1>
+      <p class="text-xl text-muted-foreground max-w-2xl mx-auto">
+        Tu proyecto con <strong>Astro</strong>, <strong>Tailwind CSS</strong>, <strong>Shadcn/UI</strong> y <strong>Open Sans</strong> está listo
+      </p>
+    </header>
+
+    <!-- Features Grid -->
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🚀 Astro
+          </CardTitle>
+          <CardDescription>
+            Framework de última generación para sitios web ultra-rápidos
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Renderizado estático y dinámico con componentes de cualquier framework
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🎨 Tailwind CSS
+          </CardTitle>
+          <CardDescription>
+            Framework CSS utility-first para diseño rápido
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Estilos consistentes y responsivos con clases predefinidas
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            ⚡ Shadcn/UI
+          </CardTitle>
+          <CardDescription>
+            Componentes UI copiables y personalizables
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Biblioteca de componentes beautiful y accesibles
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🔤 Open Sans
+          </CardTitle>
+          <CardDescription>
+            Tipografía moderna y legible
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Fuente web optimizada para una excelente experiencia de lectura
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            ⚛️ React
+          </CardTitle>
+          <CardDescription>
+            Componentes interactivos cuando los necesites
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Hidratación selectiva para máximo rendimiento
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🛠️ Desarrollo
+          </CardTitle>
+          <CardDescription>
+            Configuración completa y lista para usar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Hot reload, TypeScript y todas las herramientas modernas
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="text-center space-y-4">
+      <div class="flex gap-4 justify-center flex-wrap">
+        <Button size="lg">
+          Empezar a desarrollar
+        </Button>
+        <Button variant="outline" size="lg">  
+          Ver documentación
+        </Button>
+      </div>
+      
+      <div class="flex gap-4 justify-center flex-wrap">
+        <Button variant="secondary">
+          Añadir componentes
+        </Button>
+        <Button variant="ghost">
+          Explorar ejemplos
+        </Button>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <Card className="mt-12">
+      <CardHeader>
+        <CardTitle>🎯 Próximos pasos</CardTitle>
+        <CardDescription>
+          Tu entorno de desarrollo está completamente configurado
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <h4 className="font-semibold mb-2">Añadir más componentes:</h4>
+            <code className="text-sm bg-muted p-2 rounded block">
+              npx shadcn@latest add input textarea select
+            </code>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2">Ejecutar en desarrollo:</h4>
+            <code className="text-sm bg-muted p-2 rounded block">
+              npm run dev
+            </code>
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <p className="text-sm text-muted-foreground">
+            Todos los componentes de Shadcn/UI están disponibles. 
+            La fuente <strong>Open Sans</strong> se carga automáticamente.
+            ¡Empieza a construir tu aplicación!
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  </main>
+</Layout>
