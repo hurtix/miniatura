@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
+import { ColorPicker } from '@/components/ui/color-picker';
 import { ThumbnailConfig } from '@/types/thumbnail';
 import { DEFAULT_PRESETS } from '@/config/presets';
 
@@ -204,20 +205,10 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
 
                 <div className="space-y-2">
                   <Label>Color de Overlay</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={config.overlayColor}
-                      onChange={(e) => handleFieldChange('overlayColor', e.target.value)}
-                      className="w-16 h-10"
-                    />
-                    <Input
-                      value={config.overlayColor}
-                      onChange={(e) => handleFieldChange('overlayColor', e.target.value)}
-                      className="flex-1"
-                      placeholder="#1e40af"
-                    />
-                  </div>
+                  <ColorPicker
+                    color={config.overlayColor}
+                    onChange={(color) => handleFieldChange('overlayColor', color)}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -247,19 +238,10 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Color del Título</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={config.titleColor}
-                      onChange={(e) => handleFieldChange('titleColor', e.target.value)}
-                      className="w-16 h-10"
-                    />
-                    <Input
-                      value={config.titleColor}
-                      onChange={(e) => handleFieldChange('titleColor', e.target.value)}
-                      className="flex-1"
-                    />
-                  </div>
+                  <ColorPicker
+                    color={config.titleColor}
+                    onChange={(color) => handleFieldChange('titleColor', color)}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -302,19 +284,10 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Color del Subtítulo</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={config.subtitleColor}
-                      onChange={(e) => handleFieldChange('subtitleColor', e.target.value)}
-                      className="w-16 h-10"
-                    />
-                    <Input
-                      value={config.subtitleColor}
-                      onChange={(e) => handleFieldChange('subtitleColor', e.target.value)}
-                      className="flex-1"
-                    />
-                  </div>
+                  <ColorPicker
+                    color={config.subtitleColor}
+                    onChange={(color) => handleFieldChange('subtitleColor', color)}
+                  />
                 </div>
 
                 <div className="space-y-2">
