@@ -1,218 +1,229 @@
 # 🎨 Generador de Miniaturas para Moodle
 
-Una aplicación web moderna para crear miniaturas atractivas y personalizables para cursos de Moodle. Construida con Next.js, Tailwind CSS, Shadcn/UI y Canvas API.
-
-![Versión](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.0-blue.svg)
+Un generador profesional de miniaturas para cursos de Moodle con integración directa a la API REST de Moodle, tipografía Open Sans y múltiples presets de diseño.
 
 ## ✨ Características Principales
 
-- 🎯 **Vista previa en tiempo real** - Ve los cambios al instante
-- 🎨 **3 presets predefinidos** - Corporativo, Académico y Moderno
-- ⚙️ **Personalización completa** - Colores, fuentes, posiciones y más
-- 📱 **Diseño responsivo** - Funciona en desktop, tablet y móvil
-- 💾 **Descarga de alta calidad** - PNG optimizado con Sharp
-- 🔤 **Tipografía Open Sans** - Fuente moderna y legible
-- 🚀 **Rendimiento optimizado** - Generación server-side
+### 🚀 **Generación de Miniaturas**
+- **Generación individual**: Crear miniaturas personalizadas una a la vez
+- **Generación por conjuntos**: Crear automáticamente todo el set de un curso (presentación + unidades + evaluación)
+- **Tipografía Open Sans real**: Fuentes TTF registradas para máxima calidad
+- **Canvas optimizado**: Renderizado server-side para mejor performance
 
-## 🛠️ Stack Tecnológico
+### 🎯 **Integración con Moodle**
+- **API REST nativa**: Conecta directamente con tu instancia de Moodle
+- **Carga automática de secciones**: Importa los títulos de las unidades del curso
+- **Configuración segura**: Tokens y credenciales en variables de entorno
+- **Validación robusta**: Manejo de errores y validación de permisos
 
-### Frontend
-- **Next.js 15** - Framework React con App Router
-- **TypeScript** - Tipado estático para mayor robustez
-- **Tailwind CSS 4** - Estilos utility-first
-- **Shadcn/UI** - Componentes UI modernos y accesibles
-- **React Hook Form** - Manejo de formularios eficiente
-- **Zod** - Validación de datos con TypeScript
+### 🎭 **Presets de Diseño**
+- **Básica**: Diseño profesional azul corporativo
+- **Específica**: Estilo técnico con alineación izquierda  
+- **Sociohumanística**: Diseño minimalista y elegante
 
-### Backend & Generación de Imágenes
-- **Canvas API** - Renderizado de canvas en el cliente
-- **Sharp** - Procesamiento de imágenes server-side
-- **Node Canvas** - Generación de imágenes en el servidor
+### 🔧 **Configuración Avanzada**
+- **Tipografía completa**: Familia, peso, tamaño y color
+- **Posicionamiento**: Control preciso de alineación y ubicación
+- **Imagen de fondo**: Soporte para imágenes personalizadas
+- **Overlays**: Capas de color con opacidad configurable
 
-### Diseño
-- **Open Sans** - Fuente tipográfica principal
-- **Lucide React** - Iconos modernos y consistentes
+## 🏗️ Arquitectura Técnica
 
-## 🚀 Instalación y Configuración
+### **Frontend (Next.js 16)**
+- ✅ React 19 con Server Components
+- ✅ TypeScript para type safety
+- ✅ Tailwind CSS + Shadcn/UI para UI moderna
+- ✅ React Hook Form + Zod para validación
 
-### Prerrequisitos
-- Node.js 18+ 
-- npm o yarn
+### **Backend & APIs**
+- ✅ Next.js API Routes optimizadas
+- ✅ Canvas server-side con Node.js
+- ✅ Integración segura con Moodle REST API
+- ✅ Validación de esquemas con Zod
 
-### Instalación
+### **Tipografía**
+- ✅ Open Sans TTF convertida desde WOFF2
+- ✅ Registro automático de fuentes en Canvas
+- ✅ Fallback robusto para diferentes sistemas
+
+## 🚦 Configuración
+
+### 1. **Variables de Entorno**
+
+Crea un archivo `.env.local`:
+
+```env
+# Configuración de Moodle API
+MOODLE_BASE_URL=https://tu-moodle.edu.co/moodle
+MOODLE_WS_TOKEN=tu_token_de_webservice_aqui
+
+# Next.js
+NEXTAUTH_SECRET=tu_secret_key
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 2. **Instalación**
 
 ```bash
-# Clonar el repositorio
-git clone <tu-repositorio>
-cd miniatura
-
 # Instalar dependencias
 npm install
 
-# Iniciar servidor de desarrollo
+# Modo desarrollo
 npm run dev
 
-# Abrir en el navegador
-open http://localhost:3000
+# Build para producción
+npm run build
+npm start
 ```
 
-### Comandos Disponibles
+### 3. **Configurar Moodle WebService**
 
-```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build de producción
-npm run start        # Servidor de producción
-npm run lint         # Revisar código con ESLint
-npm run type-check   # Verificar tipos TypeScript
-```
+1. **Habilitar Web Services** en tu Moodle:
+   - `Site Administration > Advanced features`
+   - Activar "Enable web services"
 
-## 📖 Guía de Uso
+2. **Crear usuario de servicio**:
+   - Crear usuario dedicado para API
+   - Asignar rol con permisos `webservice/rest:use`
 
-### 1. Seleccionar Preset
+3. **Generar token**:
+   - `Site Administration > Server > Web services > Manage tokens`
+   - Crear token para el usuario y servicio `core_course_get_contents`
 
-Elige entre 3 presets predefinidos:
-- **🏢 Corporativo** - Fondo azul profesional, texto centrado
-- **🎓 Académico** - Verde educativo, layout estructurado  
-- **✨ Moderno** - Púrpura minimalista, tipografía elegante
+## 🎯 Uso
 
-### 2. Personalizar Contenido
+### **Generación Individual**
+1. Configurar título, subtítulo y parámetros visuales
+2. Seleccionar preset de diseño
+3. Generar y descargar miniatura
 
-- **Título**: Texto principal de la miniatura
-- **Subtítulo**: Descripción adicional del curso
+### **Generación por Conjuntos + Moodle**
+1. **Conectar con Moodle**:
+   - Ingresar Course ID de Moodle
+   - Hacer clic en "Cargar Secciones"
+   - Las unidades se llenan automáticamente
 
-### 3. Ajustar Diseño
+2. **Configurar curso**:
+   - Nombre del curso
+   - Seleccionar preset visual
+   - Revisar unidades importadas
 
-- **Color de fondo**: Selector de color + opacidad
-- **Colores de texto**: Personalizables por separado
-- **Tamaños de fuente**: Sliders para título y subtítulo
-- **Posicionamiento**: Coordenadas X/Y + alineación
+3. **Generar conjunto**:
+   - Se crean automáticamente: presentación + unidades + evaluación
+   - Descargar individual o en lote
 
-### 4. Descargar
-
-- **Vista previa**: Actualización en tiempo real
-- **Descarga PNG**: Alta calidad optimizada
-- **API Server-side**: Generación profesional con Sharp
-
-## 🏗️ Estructura del Proyecto
+## 📁 Estructura del Proyecto
 
 ```
 src/
 ├── app/
 │   ├── api/
-│   │   └── generate-image/     # API para generar imágenes
-│   ├── globals.css             # Estilos globales + Open Sans
-│   ├── layout.tsx              # Layout raíz
-│   └── page.tsx                # Página principal
+│   │   ├── generate-image/          # API individual
+│   │   ├── generate-course-set/     # API conjuntos
+│   │   └── moodle/
+│   │       └── course-sections/     # API Moodle integration
+│   ├── globals.css                  # Open Sans + Tailwind
+│   ├── layout.tsx
+│   └── page.tsx
 ├── components/
-│   ├── ui/                     # Componentes Shadcn/UI
-│   └── thumbnail/              # Componentes del generador
-│       ├── ThumbnailForm.tsx   # Formulario de configuración
-│       └── ThumbnailPreview.tsx # Vista previa canvas
+│   ├── ui/                          # Shadcn/UI components
+│   ├── thumbnail/                   # Generador individual
+│   │   ├── ThumbnailForm.tsx
+│   │   └── ThumbnailPreview.tsx
+│   └── course/                      # Generador conjuntos
+│       └── CourseSetForm.tsx        # Con integración Moodle
 ├── config/
-│   └── presets.ts              # Presets predefinidos
+│   └── presets.ts                   # Presets de diseño
+├── lib/
+│   ├── utils.ts                     # Utilidades
+│   └── moodle.ts                    # Cliente API Moodle
 ├── types/
-│   └── thumbnail.ts            # Tipos TypeScript
-└── lib/
-    └── utils.ts                # Utilidades (cn function)
+│   ├── thumbnail.ts                 # Tipos miniaturas
+│   └── moodle.ts                    # Tipos Moodle API
+└── public/
+    ├── fonts/                       # Open Sans TTF
+    │   ├── OpenSans-Regular.ttf
+    │   └── OpenSans-Bold.ttf
+    └── backgrounds/                 # Imágenes de fondo
+        └── ia.jpg
 ```
 
-## 🎨 Personalización
+## 🔌 API Endpoints
 
-### Añadir Nuevos Presets
+### **Generación de Imágenes**
 
 ```typescript
-// src/config/presets.ts
-export const CUSTOM_PRESET: ThumbnailPreset = {
-  id: 'custom',
-  name: 'Mi Preset',
-  description: 'Descripción personalizada',
-  config: {
-    // Configuración completa...
-  }
-};
-```
-
-### Modificar Colores del Tema
-
-```css
-/* src/app/globals.css */
-:root {
-  --primary: oklch(0.205 0 0);      /* Color principal */
-  --secondary: oklch(0.97 0 0);     /* Color secundario */
-  /* Más variables... */
+// POST /api/generate-image
+{
+  title: string;
+  subtitle: string;
+  titleColor: string;
+  titleSize: number;
+  titleFont: 'Open Sans' | 'Arial' | 'Helvetica';
+  // ... más configuración
 }
 ```
 
-### Añadir Componentes Shadcn/UI
+### **Generación de Conjuntos**
 
-```bash
-npx shadcn@latest add dialog toast alert
+```typescript
+// POST /api/generate-course-set
+{
+  courseName: string;
+  unitCount: number;
+  preset: 'basica' | 'especifica' | 'sociohumanistica';
+  units: [
+    { unitSubtitle: string }
+  ]
+}
 ```
 
-## 🔮 Próximas Características
+### **Integración Moodle**
 
-- [ ] **Integración Moodle API** - Subida directa a cursos
-- [ ] **Biblioteca de fondos** - Imágenes predefinidas
-- [ ] **Presets colaborativos** - Compartir configuraciones
-- [ ] **Procesamiento por lotes** - Múltiples miniaturas
-- [ ] **Plantillas avanzadas** - Layouts más complejos
-- [ ] **Modo oscuro** - Tema alternativo
-- [ ] **Exportar configuración** - JSON/YAML
-
-## 🌐 Deployment
-
-### Vercel (Recomendado)
-
-```bash
-# Conectar con Vercel
-npm i -g vercel
-vercel --prod
-
-# O usar la integración de GitHub
+```typescript
+// GET /api/moodle/course-sections?courseid=225
+{
+  success: boolean;
+  courseid: number;
+  sections: string[];
+  count: number;
+}
 ```
 
-### Docker
+## 🛠️ Tecnologías
 
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+| Categoría | Tecnología | Versión |
+|-----------|------------|---------|
+| **Framework** | Next.js | 16.1.6 |
+| **Runtime** | React | 19.2.3 |
+| **Language** | TypeScript | 5.x |
+| **Styling** | Tailwind CSS | 3.x |
+| **UI Components** | Shadcn/UI | Latest |
+| **Forms** | React Hook Form | 7.x |
+| **Validation** | Zod | 3.x |
+| **Canvas** | node-canvas | 3.x |
+| **Fonts** | @fontsource/open-sans | 5.x |
 
-## 🤝 Contribución
+## 🤝 Contribuciones
 
-1. Fork el proyecto
-2. Crea una rama feature (`git checkout -b feature/nueva-caracteristica`)
-3. Commit tus cambios (`git commit -m 'Añadir nueva característica'`)
-4. Push a la rama (`git push origin feature/nueva-caracteristica`)
-5. Abre un Pull Request
+1. Fork el repositorio
+2. Crear branch de feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit cambios (`git commit -am 'feat: nueva funcionalidad'`)
+4. Push al branch (`git push origin feature/nueva-funcionalidad`)
+5. Crear Pull Request
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 
-## 🙏 Reconocimientos
+## 🔒 Seguridad
 
-- [Shadcn/UI](https://ui.shadcn.com/) - Sistema de componentes
-- [Tailwind CSS](https://tailwindcss.com/) - Framework CSS
-- [Next.js](https://nextjs.org/) - Framework React
-- [Sharp](https://sharp.pixelplumbing.com/) - Procesamiento de imágenes
-- [Open Sans](https://fonts.google.com/specimen/Open+Sans) - Tipografía
+- ✅ **Repositorio privado** para datos sensibles
+- ✅ **Variables de entorno** para credenciales
+- ✅ **Validación server-side** de todas las entradas  
+- ✅ **No exposición de tokens** en el frontend
+- ✅ **HTTPS requerido** para producción
 
 ---
 
-**Generador de Miniaturas para Moodle** - Construido con ❤️ y Next.js
-
-```
-📧 ¿Preguntas? Abre un issue en GitHub
-🐛 ¿Bug? Reporta en la sección Issues  
-💡 ¿Idea? Discussions está abierto
-```
+**Desarrollado con ❤️ para la comunidad educativa**

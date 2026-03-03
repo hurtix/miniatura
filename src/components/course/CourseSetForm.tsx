@@ -13,11 +13,12 @@ import { Badge } from '@/components/ui/badge';
 import { DEFAULT_PRESETS } from '@/config/presets';
 import type { CourseForm, GenerateSetResponse } from '@/types/thumbnail';
 
-// Esquema de validación
+// Esquema de validación actualizado con Moodle
 const courseFormSchema = z.object({
   courseName: z.string().min(1, 'El nombre del curso es requerido').max(100, 'Máximo 100 caracteres'),
   unitCount: z.number().min(1, 'Mínimo 1 unidad').max(20, 'Máximo 20 unidades'),
   preset: z.string().min(1, 'Selecciona un preset'),
+  moodleCourseId: z.number().optional(),
   units: z.array(z.object({
     unitSubtitle: z.string().min(1, 'El subtítulo es requerido').max(80, 'Máximo 80 caracteres')
   }))
@@ -27,9 +28,20 @@ interface CourseSetFormProps {
   onGenerate?: (data: GenerateSetResponse) => void;
 }
 
+interface MoodleSectionsResponse {
+  success: boolean;
+  courseid: number;
+  sections: string[];
+  count: number;
+}
+
 export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSet, setGeneratedSet] = useState<GenerateSetResponse | null>(null);
+  const [isLoadingSections, setIsLoadingSections] = useState(false);
+  const [moodleSections, setMoodleSections] = useState<string[]>([]);
+  const [moodleCourseId, setMoodleCourseId] = useState<string>('');
+  const [moodleError, setMoodleError] = useState<string>('');
 
   const {
     register,
@@ -85,6 +97,62 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
       setValue('unitCount', count);
       adjustUnits(count);
     }
+  };
+
+  // Cargar secciones desde Moodle
+  const loadMoodleSections = async () => {
+    if (!moodleCourseId.trim()) {
+      setMoodleError('Por favor ingresa un Course ID de Moodle');
+      return;
+    }
+
+    const courseId = parseInt(moodleCourseId);
+    if (isNaN(courseId)) {
+      setMoodleError('El Course ID debe ser un número válido');
+      return;
+    }
+
+    setIsLoadingSections(true);
+    setMoodleError('');
+    setMoodleSections([]);
+
+    try {
+      const response = await fetch(`/api/moodle/course-sections?courseid=${courseId}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al cargar las secciones del curso');
+      }
+
+      const result: MoodleSectionsResponse = await response.json();
+      
+      if (result.success && result.sections.length > 0) {
+        setMoodleSections(result.sections);
+        
+        // Actualizar automáticamente el formulario
+        setValue('unitCount', result.sections.length);
+        adjustUnits(result.sections.length);
+        
+        // Llenar los subtítulos automáticamente
+        result.sections.forEach((sectionName, index) => {
+          setValue(`units.${index}.unitSubtitle`, sectionName);
+        });
+      } else {
+        setMoodleError('No se encontraron secciones en este curso');
+      }
+    } catch (error) {
+      console.error('Error loading Moodle sections:', error);
+      setMoodleError(error instanceof Error ? error.message : 'Error desconocido al cargar las secciones');
+    } finally {
+      setIsLoadingSections(false);
+    }
+  };
+
+  // Limpiar datos de Moodle
+  const clearMoodleData = () => {
+    setMoodleSections([]);
+    setMoodleError('');
+    setMoodleCourseId('');
   };
 
   const onSubmit = async (data: CourseForm) => {
@@ -211,6 +279,81 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                 <p className="text-sm text-red-500">{errors.unitCount.message}</p>
               )}
             </div>
+
+            {/* Integración con Moodle */}
+            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-purple-700">
+                  🎯 Cargar desde Moodle
+                  <Badge variant="secondary">Automático</Badge>
+                </CardTitle>
+                <CardDescription>
+                  Conecta con tu curso de Moodle para cargar automáticamente las secciones como subtítulos de las unidades.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <Label htmlFor="moodleCourseId">Course ID de Moodle</Label>
+                    <Input
+                      id="moodleCourseId"
+                      type="number"
+                      placeholder="Ej: 225"
+                      value={moodleCourseId}
+                      onChange={(e) => {
+                        setMoodleCourseId(e.target.value);
+                        setMoodleError(''); // Limpiar errores al cambiar
+                      }}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-end">
+                    <Button
+                      type="button"
+                      onClick={loadMoodleSections}
+                      disabled={isLoadingSections || !moodleCourseId.trim()}
+                      className="h-10"
+                    >
+                      {isLoadingSections ? '🔄 Cargando...' : '📥 Cargar Secciones'}
+                    </Button>
+                  </div>
+                </div>
+
+                {moodleError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">❌ {moodleError}</p>
+                  </div>
+                )}
+
+                {moodleSections.length > 0 && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-green-800">
+                        ✅ {moodleSections.length} secciones cargadas exitosamente
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={clearMoodleData}
+                      >
+                        🗑️ Limpiar
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {moodleSections.map((section, index) => (
+                        <div key={index} className="p-2 bg-white rounded border text-xs">
+                          <span className="font-medium text-green-700">Unidad {index + 1}:</span>
+                          <p className="text-gray-700 truncate" title={section}>
+                            {section}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Vista previa de miniaturas que se generarán */}
             <div className="space-y-4">
