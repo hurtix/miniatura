@@ -42,12 +42,6 @@ interface MoodleSection {
   selected: boolean;
 }
 
-interface MoodleSection {
-  id: string;
-  name: string;
-  selected: boolean;
-}
-
 interface SelectedCourse {
   id: number;
   fullname: string;
@@ -406,7 +400,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                       <p className="text-sm text-blue-700">
-                        🔄 Cargando secciones de "{selectedCourse.fullname}"...
+                        Cargando secciones de "{selectedCourse.fullname}"...
                       </p>
                     </div>
                   </div>
@@ -414,7 +408,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
 
                 {moodleError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-700">❌ {moodleError}</p>
+                    <p className="text-sm text-red-700">{moodleError}</p>
                   </div>
                 )}
 
@@ -423,7 +417,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex flex-col">
                         <p className="text-sm font-medium text-green-800">
-                          ✅ Curso cargado exitosamente
+                          Curso cargado exitosamente
                         </p>
                         <p className="text-xs text-green-600">
                           {moodleSections.length} secciones encontradas
@@ -435,7 +429,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                         size="sm"
                         onClick={clearMoodleData}
                       >
-                        🗑️ Cambiar Curso
+                        Cambiar Curso
                       </Button>
                     </div>
                   </div>
@@ -447,6 +441,28 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Miniaturas que se generarán:</h3>
+                {moodleSections.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleAllSections(true)}
+                      className="text-xs"
+                    >
+                      Todas
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleAllSections(false)}
+                      className="text-xs"
+                    >
+                      Ninguna
+                    </Button>
+                  </div>
+                )}
               </div>
               {moodleSections.length > 0 && (
                 <div className="text-sm text-blue-600 mb-3">
@@ -462,36 +478,78 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <p className="font-semibold text-blue-800">Presentación del curso</p>
                     <p className="text-sm text-blue-600">{courseName || 'Nombre del curso aquí'}</p>
                   </div>
-                  <span className="text-2xl">📚</span>
                 </div>
 
                 {/* Unidades */}
                 {moodleSections.length > 0 ? (
-                  // Solo mostrar las unidades seleccionadas
-                  selectedSections.map((section, index) => (
-                    <div key={section.id} className="p-3 bg-green-50 border-green-200 rounded-lg border">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <Badge variant="default">Unidad {index + 1}</Badge>
-                          <p className="font-semibold text-green-800">Unidad {index + 1}</p>
-                          <div className="mt-2">
-                            <Input
-                              {...register(`units.${index}.unitSubtitle`)}
-                              placeholder={`Subtítulo para Unidad ${index + 1}`}
-                              className="bg-white"
-                              key={`unit-${section.id}-${index}`}
-                            />
-                            {errors.units?.[index]?.unitSubtitle && (
-                              <p className="text-sm text-red-500 mt-1">
-                                {errors.units[index]?.unitSubtitle?.message}
-                              </p>
-                            )}
+                  // Mostrar todas las secciones con checkboxes para seleccionar
+                  moodleSections.map((section, index) => {
+                    const isSelected = section.selected;
+                    const selectedIndex = selectedSections.findIndex(s => s.id === section.id);
+                    // Calcular el número de unidad dinámico basado en las secciones seleccionadas hasta esta posición
+                    const selectedUnitNumber = moodleSections
+                      .slice(0, index + 1)
+                      .filter(s => s.selected).length;
+                    const displayUnitNumber = isSelected ? selectedUnitNumber : index + 1;
+                    
+                    return (
+                      <div
+                        key={section.id}
+                        className={`p-3 rounded-lg border transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-gray-100 border-gray-200 opacity-60'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            id={`unit-${section.id}`}
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSectionSelection(section.id)}
+                            className="flex-shrink-0 mt-1"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant={isSelected ? "default" : "secondary"}>
+                                Unidad {displayUnitNumber}
+                              </Badge>
+                              {!isSelected && (
+                                <Badge variant="outline" className="text-xs">
+                                  No se generará
+                                </Badge>
+                              )}
+                            </div>
+                            <p className={`font-semibold ${
+                              isSelected ? 'text-green-800' : 'text-gray-500'
+                            }`}>
+                              Unidad {displayUnitNumber}
+                            </p>
+                            <div className="mt-2">
+                              {isSelected && selectedIndex >= 0 ? (
+                                <>
+                                  <Input
+                                    {...register(`units.${selectedIndex}.unitSubtitle`)}
+                                    placeholder={`Subtítulo para Unidad ${selectedUnitNumber}`}
+                                    className="bg-white"
+                                    key={`unit-input-${section.id}-${selectedIndex}`}
+                                  />
+                                  {errors.units?.[selectedIndex]?.unitSubtitle && (
+                                    <p className="text-sm text-red-500 mt-1">
+                                      {errors.units[selectedIndex]?.unitSubtitle?.message}
+                                    </p>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="p-2 bg-gray-100 rounded text-sm text-gray-500 italic">
+                                  {section.name} (No se generará)
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <span className="text-2xl ml-4">📖</span>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   // Vista tradicional sin Moodle
                   fields.map((field, index) => (
@@ -512,75 +570,36 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                           )}
                         </div>
                       </div>
-                      <span className="text-2xl ml-4">📖</span>
                     </div>
                   ))
                 )}
 
-                {/* Selector de secciones si hay secciones de Moodle */}
+                {/* Control de selección si hay secciones de Moodle */}
                 {moodleSections.length > 0 && (
-                  <div className="p-4 bg-purple-50 border-purple-200 rounded-lg border">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-purple-800">🔧 Personalizar secciones</h4>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleAllSections(true)}
-                          className="text-xs"
-                        >
-                          ✅ Todas
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => toggleAllSections(false)}
-                          className="text-xs"
-                        >
-                          ❌ Ninguna
-                        </Button>
-                      </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="text-sm text-blue-700">
+                      {selectedSections.length} de {moodleSections.length} secciones seleccionadas
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                      {moodleSections.map((section, index) => (
-                        <div key={section.id} className="flex items-center gap-2 p-2 bg-white rounded border">
-                          <Checkbox
-                            id={`selector-${section.id}`}
-                            checked={section.selected}
-                            onCheckedChange={() => toggleSectionSelection(section.id)}
-                            className="flex-shrink-0"
-                          />
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Badge variant={section.selected ? "default" : "secondary"} className="text-xs flex-shrink-0">
-                              {index + 1}
-                            </Badge>
-                            <label 
-                              htmlFor={`selector-${section.id}`}
-                              className={`text-sm cursor-pointer truncate ${
-                                section.selected ? 'text-gray-900 font-medium' : 'text-gray-500'
-                              }`}
-                              title={section.name}
-                            >
-                              {section.name}
-                            </label>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAllSections(true)}
+                        className="text-xs"
+                      >
+                        Todas
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAllSections(false)}
+                        className="text-xs"
+                      >
+                        Ninguna
+                      </Button>
                     </div>
-                  </div>
-                )}
-
-                {/* Advertencia si no hay secciones seleccionadas */}
-                {moodleSections.length > 0 && selectedSections.length === 0 && (
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                    <p className="text-sm text-yellow-800 font-medium">
-                      ⚠️ No hay secciones seleccionadas
-                    </p>
-                    <p className="text-xs text-yellow-600 mt-1">
-                      Usa la sección "🔧 Personalizar secciones" para seleccionar qué unidades generar
-                    </p>
                   </div>
                 )}
 
@@ -591,7 +610,6 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <p className="font-semibold text-orange-800">Módulo de Evaluación</p>
                     <p className="text-sm text-orange-600">Sin subtítulo</p>
                   </div>
-                  <span className="text-2xl">📊</span>
                 </div>
               </div>
             </div>
@@ -612,7 +630,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                 </>
               ) : (
                 <>
-                  ✨ Generar {moodleSections.length > 0 ? selectedSections.length + 2 : fields.length + 2} Miniaturas del Curso ✨
+                  Generar {moodleSections.length > 0 ? selectedSections.length + 2 : fields.length + 2} Miniaturas del Curso
                 </>
               )}
             </Button>
@@ -643,7 +661,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-green-700">
-                      ✅ Conjunto generado exitosamente
+                      Conjunto generado exitosamente
                     </h3>
                     <Button onClick={downloadAll} variant="outline">
                       Descargar Todas ({generatedSet.images.length})
@@ -690,7 +708,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                 </div>
               ) : (
                 <div className="text-red-700">
-                  <h3 className="font-semibold">❌ Error al generar</h3>
+                  <h3 className="font-semibold">Error al generar</h3>
                   <p>{generatedSet.error}</p>
                 </div>
               )}
