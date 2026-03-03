@@ -12,6 +12,21 @@ export interface MoodleSection {
   modules: MoodleModule[];
 }
 
+export interface MoodleCourse {
+  id: number;
+  fullname: string;
+  shortname: string;
+  categoryid: number;
+  categoryname?: string;
+  summary?: string;
+  summaryformat?: number;
+  format?: string;
+  startdate?: number;
+  enddate?: number;
+  visible?: number;
+  enrollmentmethods?: string[];
+}
+
 export interface MoodleModule {
   id: number;
   url: string;

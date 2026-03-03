@@ -4,7 +4,8 @@ import {
   MoodleCourseContentsResponse,
   GetCourseContentsParams,
   CourseSection,
-  MoodleConfig 
+  MoodleConfig,
+  MoodleCourse
 } from '@/types/moodle';
 
 /**
@@ -164,5 +165,74 @@ export async function getCourseInfo(courseid: number): Promise<{
       sectionNames: [],
       isValid: false
     };
+  }
+}
+
+/**
+ * Busca cursos por nombre en Moodle
+ * @param searchTerm Término de búsqueda para filtrar cursos
+ * @param limit Número máximo de resultados (default: 20)
+ * @returns Array de cursos que coinciden con la búsqueda
+ */
+export async function searchCourses(searchTerm: string = '', limit: number = 20): Promise<MoodleCourse[]> {
+  try {
+    // Si no hay término de búsqueda, obtener cursos recientes
+    const criteria = searchTerm.trim() 
+      ? [{ key: 'search', value: searchTerm.trim() }]
+      : [];
+
+    const response = await callMoodleAPI<{ courses: MoodleCourse[], warnings?: any[] }>(
+      'core_course_search_courses',
+      { 
+        criterianame: 'search',
+        criteriavalue: searchTerm.trim(),
+        page: 0,
+        perpage: limit
+      }
+    );
+
+    return response.courses || [];
+  } catch (error) {
+    console.error('Error searching courses:', error);
+    
+    // Fallback: intentar con get courses si search falla
+    try {
+      const allCourses = await callMoodleAPI<MoodleCourse[]>('core_course_get_courses', {});
+      
+      if (!searchTerm.trim()) {
+        return allCourses.slice(0, limit);
+      }
+      
+      // Filtrar localmente si la búsqueda no está disponible
+      const filtered = allCourses.filter(course => 
+        course.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.shortname.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      return filtered.slice(0, limit);
+    } catch (fallbackError) {
+      console.error('Fallback course search also failed:', fallbackError);
+      throw new Error('Unable to search courses. Check Moodle configuration.');
+    }
+  }
+}
+
+/**
+ * Obtiene información detallada de un curso específico
+ * @param courseid ID del curso
+ * @returns Información completa del curso
+ */
+export async function getCourseDetails(courseid: number): Promise<MoodleCourse | null> {
+  try {
+    const courses = await callMoodleAPI<MoodleCourse[]>('core_course_get_courses', {
+      options: {
+        ids: [courseid]
+      }
+    });
+    
+    return courses.length > 0 ? courses[0] : null;
+  } catch (error) {
+    console.error(`Error getting course details for ${courseid}:`, error);
+    return null;
   }
 }
