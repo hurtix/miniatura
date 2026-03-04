@@ -38,7 +38,7 @@ function mapFontWeight(weight: number): string {
 }
 
 // Función de dibujado de thumbnails
-async function drawThumbnail(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, config: ThumbnailConfig) {
+async function drawThumbnail(canvas: any, ctx: any, config: ThumbnailConfig) {
   const { width, height } = config
   
   // Limpiar canvas
@@ -55,7 +55,7 @@ async function drawThumbnail(canvas: HTMLCanvasElement, ctx: CanvasRenderingCont
         
         // Dibujar imagen de fondo ajustada al tamaño del canvas
         ctx.globalAlpha = 1
-        ctx.drawImage(backgroundImg, 0, 0, width, height)
+        ctx.drawImage(backgroundImg as any, 0, 0, width, height)
         ctx.globalAlpha = 1
       }
     } catch (error) {

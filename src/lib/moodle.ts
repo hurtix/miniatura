@@ -256,7 +256,7 @@ export async function getCourseDetails(courseid: number): Promise<MoodleCourse |
       options: {
         ids: [courseid]
       }
-    }, 'search'); // Usar token de búsqueda
+    } as any, 'search'); // Usar token de búsqueda
     
     return courses.length > 0 ? courses[0] : null;
   } catch (error) {

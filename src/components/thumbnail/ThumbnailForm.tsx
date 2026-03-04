@@ -60,7 +60,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
     },
   });
 
-  const handleFieldChange = (field: keyof ConfigForm, value: string | number | boolean) => {
+  const handleFieldChange = (field: keyof ConfigForm, value: any) => {
     form.setValue(field, value);
     const newConfig = { ...config, [field]: value };
     onChange(newConfig);
@@ -102,7 +102,6 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
               >
                 <div className="space-y-2">
                   <h3 className="font-semibold">{preset.name}</h3>
-                  <p className="text-sm text-muted-foreground">{preset.description}</p>
                   <div className="flex gap-2">
                     <Badge 
                       variant="secondary" 

@@ -279,16 +279,6 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     ctx.fillText(config.subtitle, subtitleX, containerY + config.titleSize + textSpacing);
   };
 
-  const measureText = (ctx: CanvasRenderingContext2D, text: string, size: number, font: string, weight: number) => {
-    ctx.font = `${weight} ${size}px ${font}`;
-    const metrics = ctx.measureText(text);
-    return {
-      width: metrics.width,
-      height: size, // Aproximación
-      metrics
-    };
-  };
-
   const downloadImage = async () => {
     // Crear un canvas temporal para la descarga en tamaño completo
     const downloadCanvas = document.createElement('canvas');

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   // Convertir a buffer
   const buffer = canvas.toBuffer('image/png');
 
-  return new NextResponse(buffer, {
+  return new NextResponse(buffer as any, {
     headers: {
       'Content-Type': 'image/png',
       'Cache-Control': 'public, max-age=31536000',

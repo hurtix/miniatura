@@ -166,7 +166,7 @@ export function ExampleUsage() {
 
           if (!selectedSection) return null;
 
-          const response = await fetch(img.url);
+          const response = await fetch(img.dataUrl);
           const imageBlob = await response.blob();
 
           return uploadImageToMoodleGrid(
