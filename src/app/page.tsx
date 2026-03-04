@@ -126,16 +126,6 @@ export default function Home() {
 
           <TabsContent value="course-set">
             <div className="max-w-7xl mx-auto">
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Generador de Conjunto Completo</CardTitle>
-                  <CardDescription>
-                    Genera automáticamente todas las miniaturas necesarias para un curso completo: 
-                    presentación + unidades + evaluación
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
               <CourseSetForm onGenerate={handleCourseSetGenerated} />
             </div>
           </TabsContent>
