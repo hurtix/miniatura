@@ -23,8 +23,25 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    # Instalar herramientas necesarias para deploy
-                    apk add --no-cache rsync openssh-client
+                    # Instalar herramientas del sistema necesarias
+                    apk add --no-cache \
+                        rsync \
+                        openssh-client \
+                        python3 \
+                        py3-pip \
+                        make \
+                        g++ \
+                        pkgconfig \
+                        cairo-dev \
+                        jpeg-dev \
+                        pango-dev \
+                        giflib-dev \
+                        librsvg-dev \
+                        pixman-dev \
+                        pangomm-dev
+                    
+                    # Verificar que Python está disponible
+                    python3 --version
                     
                     # Instalar dependencias del proyecto
                     npm ci --production
