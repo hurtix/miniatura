@@ -14,13 +14,7 @@ pipeline {
         SSH_CREDENTIALS = 'vps-ssh'  // ✅ Usar el ID que ya tienes
     }
     
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'master', url: env.GIT_URL
-            }
-        }
-        
+    stages {        
         stage('Install Dependencies') {
             steps {
                 sh 'npm ci --production'
