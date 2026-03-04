@@ -17,12 +17,10 @@ import type { CourseForm, GenerateSetResponse } from '@/types/thumbnail';
 
 // Esquema de validación simplificado - courseName ahora se llena automáticamente
 const courseFormSchema = z.object({
-  courseName: z.string().min(1, 'El nombre del curso es requerido').max(100, 'Máximo 100 caracteres'),
-  unitCount: z.number().min(1, 'Mínimo 1 unidad').max(20, 'Máximo 20 unidades'),
   preset: z.string().min(1, 'Selecciona un preset'),
   units: z.array(z.object({
-    unitSubtitle: z.string().min(1, 'El subtítulo es requerido').max(80, 'Máximo 80 caracteres')
-  }))
+    unitSubtitle: z.string().min(1, 'El subtítulo es requerido').max(50, 'Máximo 50 caracteres'),
+  })).optional().default([]),
 });
 
 interface CourseSetFormProps {
@@ -87,51 +85,18 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
   } = useForm<CourseForm>({
     resolver: zodResolver(courseFormSchema),
     defaultValues: {
-      courseName: '',
-      unitCount: 4,
       preset: 'basica',
-      units: [
-        { unitSubtitle: '' },
-        { unitSubtitle: '' },
-        { unitSubtitle: '' },
-        { unitSubtitle: '' }
-      ]
-    }
+      units: [],
+    },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, replace } = useFieldArray({
     control,
     name: 'units'
   });
 
-  const unitCount = watch('unitCount');
-  const courseName = watch('courseName');
-
-  // Ajustar número de unidades dinámicamente
-  const adjustUnits = (newCount: number) => {
-    const currentCount = fields.length;
-    
-    if (newCount > currentCount) {
-      // Agregar unidades
-      for (let i = currentCount; i < newCount; i++) {
-        append({ unitSubtitle: '' });
-      }
-    } else if (newCount < currentCount) {
-      // Remover unidades
-      for (let i = currentCount - 1; i >= newCount; i--) {
-        remove(i);
-      }
-    }
-  };
-
-  // Manejar cambio de cantidad de unidades
-  const handleUnitCountChange = (value: string) => {
-    const count = parseInt(value);
-    if (!isNaN(count) && count >= 1 && count <= 20) {
-      setValue('unitCount', count);
-      adjustUnits(count);
-    }
-  };
+  // Solo mostrar cuando hay secciones de Moodle seleccionadas
+  const selectedSections = moodleSections.filter(s => s.selected);
 
   // Cargar secciones desde Moodle cuando se selecciona un curso
   const loadMoodleSections = async (course: SelectedCourse) => {
@@ -158,8 +123,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
         setMoodleSections(sectionsWithSelection);
         
         // Actualizar automáticamente el formulario
-        setValue('unitCount', result.sections.length);
-        adjustUnits(result.sections.length);
+        replace(result.sections.map(() => ({ unitSubtitle: '' })));
         
         // Llenar los subtítulos automáticamente
         result.sections.forEach((section, index) => {
@@ -167,10 +131,15 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
         });
       } else {
         setMoodleError('No se encontraron secciones en este curso');
+        setMoodleSections([]);
+        replace([]);
       }
     } catch (error) {
       console.error('Error loading Moodle sections:', error);
-      setMoodleError(error instanceof Error ? error.message : 'Error desconocido al cargar las secciones');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar las secciones';
+      setMoodleError(errorMessage);
+      setMoodleSections([]);
+      replace([]);
     } finally {
       setIsLoadingSections(false);
     }
@@ -181,25 +150,12 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
     setSelectedCourse(course);
     setMoodleError('');
     setMoodleSections([]);
+    replace([]);
     
     if (course) {
-      // Llenar automáticamente el nombre del curso
-      setValue('courseName', course.fullname);
-      
       // Cargar las secciones automáticamente
       loadMoodleSections(course);
-    } else {
-      // Limpiar formulario si se deselecciona
-      setValue('courseName', '');
     }
-  };
-
-  // Limpiar datos de Moodle
-  const clearMoodleData = () => {
-    setSelectedCourse(null);
-    setMoodleSections([]);
-    setMoodleError('');
-    setValue('courseName', ''); // Limpiar también el nombre
   };
 
   // Toggle selección de una sección específica
@@ -220,55 +176,47 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
     );
   };
 
-  // Obtener secciones seleccionadas
-  const selectedSections = moodleSections.filter(section => section.selected);
-
   // Aplicar secciones seleccionadas al formulario
   const applySelectedSections = () => {
     const selectedNames = selectedSections.map(section => section.name);
-    setValue('unitCount', selectedNames.length);
     
-    // Ajustar el número de unidades (esto ya maneja agregar/remover campos)
-    adjustUnits(selectedNames.length);
-    
-    // Asignar los subtítulos seleccionados a los campos correspondientes
-    selectedNames.forEach((sectionName, index) => {
-      setValue(`units.${index}.unitSubtitle`, sectionName);
-    });
+    // Actualizar campos del formulario
+    replace(selectedNames.map(name => ({ unitSubtitle: name })));
   };
 
-  // Efecto para actualizar subtítulos cuando cambia el número de fields
-  useEffect(() => {
-    if (moodleSections.length > 0 && fields.length === selectedSections.length) {
-      selectedSections.forEach((section, index) => {
-        setValue(`units.${index}.unitSubtitle`, section.name);
-      });
-    }
-  }, [fields.length, selectedSections, moodleSections.length]);
-
-  // Aplicar automáticamente los cambios cuando cambian las selecciones
+  // Efecto para actualizar subtítulos cuando cambian las secciones seleccionadas
   useEffect(() => {
     if (moodleSections.length > 0) {
       const selectedNames = selectedSections.map(section => section.name);
-      setValue('unitCount', selectedNames.length);
-      adjustUnits(selectedNames.length);
+      replace(selectedNames.map(name => ({ unitSubtitle: name })));
     }
-  }, [selectedSections.length, moodleSections.length]);
+  }, [selectedSections.length, moodleSections.length, replace]);
 
   const onSubmit = async (data: CourseForm) => {
+    if (selectedSections.length === 0) {
+      setMoodleError('Debes seleccionar al menos una sección del curso de Moodle');
+      return;
+    }
+
     setIsGenerating(true);
-    setGeneratedSet(null); // Limpiar resultados anteriores
+    setGeneratedSet(null);
     
     try {
-      console.log('📤 Enviando datos al API:', data);
-      console.log('Preset seleccionado:', data.preset);
+      const requestData = {
+        ...data,
+        courseName: selectedCourse?.fullname || 'Curso de Moodle',
+        unitCount: selectedSections.length,
+        units: selectedSections.map((section, index) => ({
+          unitSubtitle: data.units?.[index]?.unitSubtitle || section.name
+        }))
+      };
       
       const response = await fetch('/api/generate-course-set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
 
       console.log('Respuesta recibida:', response.status);
@@ -439,54 +387,23 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             
-            {/* Información básica del curso */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="courseName">Nombre del Curso</Label>
-                <Input
-                  id="courseName"
-                  {...register('courseName')}
-                  placeholder="Ej: Introducción a la Programación"
-                />
-                {errors.courseName && (
-                  <p className="text-sm text-red-500">{errors.courseName.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="preset">Preset Visual</Label>
-                <Select onValueChange={(value) => setValue('preset', value)} defaultValue="basica">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un preset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEFAULT_PRESETS.map((preset) => (
-                      <SelectItem key={preset.id} value={preset.id}>
-                        {preset.name} - {preset.description}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.preset && (
-                  <p className="text-sm text-red-500">{errors.preset.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Cantidad de unidades */}
+            {/* Solo preset visual - curso se selecciona desde Moodle */}
             <div className="space-y-2">
-              <Label htmlFor="unitCount">Cantidad de Unidades</Label>
-              <Input
-                id="unitCount"
-                type="number"
-                min="1"
-                max="20"
-                value={unitCount}
-                onChange={(e) => handleUnitCountChange(e.target.value)}
-                className="w-32"
-              />
-              {errors.unitCount && (
-                <p className="text-sm text-red-500">{errors.unitCount.message}</p>
+              <Label htmlFor="preset">Preset Visual</Label>
+              <Select onValueChange={(value) => setValue('preset', value)} defaultValue="basica">
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEFAULT_PRESETS.map((preset) => (
+                    <SelectItem key={preset.id} value={preset.id}>
+                      {preset.name} - {preset.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.preset && (
+                <p className="text-sm text-red-500">{errors.preset.message}</p>
               )}
             </div>
 
@@ -555,7 +472,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={clearMoodleData}
+                        onClick={() => handleCourseSelect(null)}
                       >
                         Cambiar Curso
                       </Button>
@@ -762,20 +679,23 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
             {/* Botón de generar */}
             <Button 
               type="submit" 
-              disabled={isGenerating || (moodleSections.length > 0 && selectedSections.length === 0)} 
+              disabled={isGenerating || selectedSections.length === 0} 
               className="w-full"
               size="lg"
             >
               {isGenerating ? (
                 <>
                   <span className="animate-spin mr-2">⏳</span>
-                  Generando {moodleSections.length > 0 ? selectedSections.length : fields.length + 2} miniaturas...
+                  Generando {selectedSections.length} miniaturas...
                   <br />
                   <span className="text-xs opacity-75">Esto puede tomar unos segundos</span>
                 </>
               ) : (
                 <>
-                  Generar {moodleSections.length > 0 ? selectedSections.length : fields.length + 2} Miniaturas del Curso
+                  {selectedSections.length > 0 
+                    ? `Generar ${selectedSections.length} Miniaturas del Curso` 
+                    : 'Selecciona un curso de Moodle primero'
+                  }
                 </>
               )}
             </Button>
@@ -788,7 +708,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                   <div>
                     <p className="font-medium text-blue-900">Generando miniaturas...</p>
                     <p className="text-sm text-blue-600">
-                      Presentación + {unitCount} Unidades + Evaluación = {fields.length + 2} imágenes
+                      Generando {selectedSections.length} miniaturas del curso
                     </p>
                     <p className="text-xs text-blue-500 mt-1">
                       Por favor mantén esta pestaña abierta hasta que termine

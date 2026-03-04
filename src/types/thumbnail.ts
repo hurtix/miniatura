@@ -79,10 +79,8 @@ export interface MoodleConfig {
 
 // Formulario de datos para conjunto completo
 export interface CourseForm {
-  courseName: string;
-  unitCount: number;
   preset: string;
-  units: {
+  units?: {
     unitSubtitle: string;
   }[];
 }

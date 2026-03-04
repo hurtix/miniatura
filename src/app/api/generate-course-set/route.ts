@@ -170,14 +170,14 @@ function createThumbnailConfig(
 
 export async function POST(request: NextRequest) {
   try {
-    const body: CourseForm = await request.json()
+    const body = await request.json()
     const { courseName, unitCount, preset, units } = body
     
     console.log(`🔍 DEBUG: Preset solicitado: "${preset}"`);
     console.log(`🔍 DEBUG: Presets disponibles:`, DEFAULT_PRESETS.map(p => p.id));
     
     // Validación básica
-    if (!courseName || !preset || unitCount < 1) {
+    if (!courseName || !preset || !unitCount || unitCount < 1) {
       return NextResponse.json(
         { success: false, error: 'Datos del formulario inválidos', images: [] },
         { status: 400 }
