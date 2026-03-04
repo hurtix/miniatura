@@ -146,7 +146,7 @@ export function CourseCombobox({
             <div className="flex items-center gap-1 flex-shrink-0">
               {displayCourse && (
                 <div
-                  className="h-4 w-4 flex items-center justify-center cursor-pointer rounded-sm hover:bg-destructive hover:text-destructive-foreground text-muted-foreground hover:text-white text-xs font-bold select-none"
+                  className="h-4 w-4 flex items-center justify-center cursor-pointer rounded-sm bg-muted hover:bg-destructive hover:text-destructive-foreground text-muted-foreground hover:text-white text-xs font-bold select-none"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();

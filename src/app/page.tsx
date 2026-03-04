@@ -27,13 +27,13 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-2">
+          <div className="flex items-end justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
                 Generador de Miniaturas para Moodle
               </h1>
-              <p className="text-muted-foreground mt-2">
+              <p className="text-muted-foreground text-sm mt-1">
                 Crea miniaturas profesionales para tus cursos - individual o conjuntos completos
               </p>
             </div>
@@ -47,7 +47,7 @@ export default function Home() {
       </header>
 
       {/* Contenido Principal */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="presets" className="flex items-center gap-2">
@@ -58,17 +58,11 @@ export default function Home() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="presets">
+          <TabsContent value="presets" className='max-w-7xl mx-auto'>
             <div className="grid gap-8 lg:grid-cols-2">
               {/* Panel de Gestión de Presets */}
               <div className="space-y-6">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Gestión de Presets</CardTitle>
-                    <CardDescription>
-                      Crea, edita y administra presets personalizados para tus miniaturas
-                    </CardDescription>
-                  </CardHeader>
                   <CardContent>
                     <PresetManager
                       config={config}
@@ -131,7 +125,7 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="course-set">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-7xl mx-auto">
               <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>Generador de Conjunto Completo</CardTitle>
@@ -148,44 +142,9 @@ export default function Home() {
         </Tabs>
 
         {/* Footer informativo */}
-        <footer className="mt-16 pt-8 border-t">
-          <div className="grid gap-8 md:grid-cols-3">
-            <div>
-              <h3 className="font-semibold mb-3">Gestor de Presets</h3>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>Crear presets personalizados</li>
-                <li>Editar presets existentes</li>
-                <li>Vista previa en tiempo real</li>
-                <li>Guardar/cargar automáticamente</li>
-                <li>Gestión completa CRUD</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-3">Conjunto Completo</h3>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>Presentación del curso</li>
-                <li>Unidad 1, 2, 3... automático</li>
-                <li>Módulo de Evaluación</li>
-                <li>Descarga masiva</li>
-                <li>Consistencia visual</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-3">Tecnología</h3>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>Next.js 15 + TypeScript</li>
-                <li>Tailwind CSS + Shadcn/UI</li>
-                <li>Canvas API + Sharp</li>
-                <li>React Hook Form + Zod</li>
-                <li>API de generación masiva</li>
-              </ul>
-            </div>
-          </div>
-          
+        <footer>        
           <div className="mt-8 pt-4 border-t text-center text-sm text-muted-foreground">
-            <p>Generador de Miniaturas para Moodle v2.0 - con generación de conjuntos completos ❤️</p>
+            <p>Generador de Miniaturas para Moodle &copy; UNICAUCA {new Date().getFullYear()}</p>
           </div>
         </footer>
       </main>

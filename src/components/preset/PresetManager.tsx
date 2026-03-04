@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 import { ColorPicker } from '@/components/ui/color-picker';
+import { ImageSelector } from '@/components/ui/image-selector';
 import { ThumbnailConfig, ThumbnailPreset } from '@/types/thumbnail';
 import initialPresets from '@/config/presets.json';
 import { Edit2, Trash2 } from 'lucide-react';
@@ -261,7 +262,11 @@ export function PresetManager({ config, onChange }: PresetManagerProps) {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Crear Nuevo Preset</Button>
+            <Button
+              variant="outline"
+              size="sm"
+            >
+              Nuevo Preset</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -314,7 +319,7 @@ export function PresetManager({ config, onChange }: PresetManagerProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
             {presets.map((preset) => {
               const isSelected = selectedPreset?.id === preset.id;
               
@@ -429,30 +434,13 @@ export function PresetManager({ config, onChange }: PresetManagerProps) {
 
               {/* Diseño */}
               <TabsContent value="design" className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Imagen de Fondo</Label>
-                  <Select 
-                    value={config.backgroundImage || 'none'}
-                    onValueChange={(value) => {
-                      const newConfig = { ...config, backgroundImage: value === 'none' ? null : value };
-                      handleConfigChange(newConfig);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar imagen de fondo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin imagen de fondo</SelectItem>
-                      <SelectItem value="/backgrounds/ia.jpg">Inteligencia Artificial</SelectItem>
-                      <SelectItem value="/backgrounds/corporate-bg.jpg">Corporativa</SelectItem>
-                      <SelectItem value="/backgrounds/academic-bg.jpg">Académica</SelectItem>
-                      <SelectItem value="/backgrounds/modern-bg.jpg">Moderna</SelectItem>
-                      <SelectItem value="/backgrounds/tech-bg.jpg">Tecnológica</SelectItem>
-                      <SelectItem value="/backgrounds/nature-bg.jpg">Naturaleza</SelectItem>
-                      <SelectItem value="/backgrounds/abstract-bg.jpg">Abstracta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <ImageSelector
+                  value={config.backgroundImage}
+                  onChange={(imageUrl) => {
+                    const newConfig = { ...config, backgroundImage: imageUrl };
+                    handleConfigChange(newConfig);
+                  }}
+                />
 
                 <div className="space-y-2">
                   <Label>Color de Overlay</Label>

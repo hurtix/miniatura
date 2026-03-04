@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 import { ColorPicker } from '@/components/ui/color-picker';
+import { ImageSelector } from '@/components/ui/image-selector';
 import { ThumbnailConfig } from '@/types/thumbnail';
 import initialPresets from '@/config/presets.json';
 
@@ -166,26 +167,10 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Imagen de Fondo</Label>
-                  <Select 
-                    value={config.backgroundImage || 'none'}
-                    onValueChange={(value) => handleFieldChange('backgroundImage', value === 'none' ? null : value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar imagen de fondo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin imagen de fondo</SelectItem>
-                      <SelectItem value="/backgrounds/corporate-bg.jpg">Corporativa</SelectItem>
-                      <SelectItem value="/backgrounds/academic-bg.jpg">Académica</SelectItem>
-                      <SelectItem value="/backgrounds/modern-bg.jpg">Moderna</SelectItem>
-                      <SelectItem value="/backgrounds/tech-bg.jpg">Tecnológica</SelectItem>
-                      <SelectItem value="/backgrounds/nature-bg.jpg">Naturaleza</SelectItem>
-                      <SelectItem value="/backgrounds/abstract-bg.jpg">Abstracta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <ImageSelector
+                  value={config.backgroundImage}
+                  onChange={(imageUrl) => handleFieldChange('backgroundImage', imageUrl)}
+                />
 
 
                 <div className="space-y-2">

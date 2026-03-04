@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CourseCombobox } from '@/components/ui/course-combobox';
 import initialPresets from '@/config/presets.json';
 import type { CourseForm, GenerateSetResponse, ThumbnailPreset } from '@/types/thumbnail';
+import { Download, Triangle } from 'lucide-react';
 
 // Esquema de validación simplificado - courseName ahora se llena automáticamente
 const courseFormSchema = z.object({
@@ -512,13 +513,13 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Miniaturas que se generarán:</h3>
                 {moodleSections.length > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-0">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => toggleAllSections(true)}
-                      className="text-xs"
+                      className="text-xs rounded-tr-none rounded-br-none"
                     >
                       Todas
                     </Button>
@@ -527,7 +528,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => toggleAllSections(false)}
-                      className="text-xs"
+                      className="text-xs rounded-tl-none rounded-bl-none border-l-0"
                     >
                       Ninguna
                     </Button>
@@ -675,13 +676,13 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <div className="text-sm text-blue-700">
                       {selectedSections.length} de {moodleSections.length} secciones seleccionadas
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-0">
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => toggleAllSections(true)}
-                        className="text-xs"
+                        className="text-xs rounded-tr-none rounded-br-none"
                       >
                         Todas
                       </Button>
@@ -690,7 +691,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                         variant="outline"
                         size="sm"
                         onClick={() => toggleAllSections(false)}
-                        className="text-xs"
+                        className="text-xs rounded-tl-none rounded-bl-none border-l-0"
                       >
                         Ninguna
                       </Button>
@@ -705,15 +706,13 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
             <Button 
               type="submit" 
               disabled={isGenerating || selectedSections.length === 0} 
-              className="w-full"
-              size="lg"
+              className="w-fit"
+              size="sm"
             >
               {isGenerating ? (
                 <>
-                  <span className="animate-spin mr-2">⏳</span>
+                  <span className="animate-spin mr-2"><Triangle /></span>
                   Generando {selectedSections.length} miniaturas...
-                  <br />
-                  <span className="text-xs opacity-75">Esto puede tomar unos segundos</span>
                 </>
               ) : (
                 <>
@@ -746,15 +745,15 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
 
           {/* Resultados */}
           {generatedSet && (
-            <div className="mt-6 p-4 border rounded-lg">
+            <div className="mt-6 p-4 border rounded-lg bg-muted">
               {generatedSet.success ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-green-700">
+                  <div className="flex items-start justify-between">
+                    <h3 className="text-lg font-semibold leading-tight">
                       Conjunto generado exitosamente
                     </h3>
                     <div className="flex gap-2">
-                      <Button onClick={downloadAll} variant="outline">
+                      <Button onClick={downloadAll} variant="outline" size="sm">
                         Descargar Todas ({generatedSet.images.length})
                       </Button>
                       
@@ -763,9 +762,10 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                         <div className="flex flex-col gap-2">
                           <Button 
                             onClick={uploadToMoodle} 
-                            variant="default"
+                            variant="destructive"
+                            size="sm"
                             disabled={isUploading}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="w-fit ml-auto"
                           >
                             {isUploading ? (
                               <>
@@ -774,16 +774,10 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                               </>
                             ) : (
                               <>
-                                📤 Subir a Moodle ({selectedSections.length} secciones)
+                                 Subir a Moodle ({selectedSections.length} secciones)
                               </>
                             )}
                           </Button>
-                          
-                          {/* Nota informativa sobre compatibilidad */}
-                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                            <strong>Nota:</strong> La actualización automática de grid depende de la configuración de tu Moodle. 
-                            En algunos casos podrías necesitar aplicar manualmente las imágenes desde el área de borradores.
-                          </div>
                         </div>
                       )}
                     </div>
@@ -836,7 +830,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {generatedSet.images.map((image, index) => (
-                      <div key={index} className="border rounded-lg p-3">
+                      <div key={index} className="border bg-white relative rounded-lg p-3">
                         <div className="aspect-video bg-gray-100 rounded mb-2">
                           <img 
                             src={image.imageUrl} 
@@ -845,19 +839,21 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                           />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm font-medium">{image.filename}</p>
-                          <Badge variant={
+                          <p className="text-sm font-medium break-words">{image.filename}</p>
+                          <Badge
+                          className='absolute top-5 left-5'
+                           variant={
                             image.type === 'presentation' ? 'default' :
-                            image.type === 'unit' ? 'secondary' : 'destructive'
+                            image.type === 'unit' ? 'secondary' : 'default'
                           }>
                             {image.type === 'presentation' ? 'Presentación' :
                              image.type === 'unit' ? `Unidad ${image.unitNumber}` : 'Evaluación'}
                           </Badge>
-                          <br />
+                          {/* <br /> */}
                           <Button 
                             variant="outline" 
-                            size="sm" 
-                            className="w-full"
+                            size="icon-xs" 
+                            className="ml-0"
                             onClick={() => {
                               const link = document.createElement('a');
                               link.href = image.imageUrl;
@@ -865,7 +861,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                               link.click();
                             }}
                           >
-                            Descargar
+                            <Download className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>

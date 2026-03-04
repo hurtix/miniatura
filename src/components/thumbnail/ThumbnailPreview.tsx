@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ThumbnailConfig } from '@/types/thumbnail';
 import { Button } from '@/components/ui/button';
+import { Clipboard, ClipboardCopyIcon, Copy, Download } from 'lucide-react';
 
 interface ThumbnailPreviewProps {
   config: ThumbnailConfig;
@@ -186,26 +187,30 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
   return (
     <div className={`flex flex-col space-y-4 ${className}`}>
       {/* Preview con tamaños de Moodle */}
-      <div className="bg-white p-4 rounded-lg border">
+      <div className="bg-muted p-8 rounded-none">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold">Vista Previa Moodle</h3>
-          <div className="flex gap-2">
-            <button 
+          <div className="flex gap-0">
+            <Button 
               onClick={() => setPreviewScale(1)} 
-              className={`px-3 py-1 text-sm rounded ${previewScale === 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              variant={previewScale === 1 ? "default" : "outline"}
+              size="sm"
+              className='rounded-tr-none rounded-br-none'
             >
-              1x (200x140)
-            </button>
-            <button 
+              1X
+            </Button>
+            <Button 
               onClick={() => setPreviewScale(2)} 
-              className={`px-3 py-1 text-sm rounded ${previewScale === 2 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              variant={previewScale === 2 ? "default" : "outline"}
+              size="sm"
+              className='rounded-tl-none rounded-bl-none'
             >
-              2x (400x280)
-            </button>
+              2X
+            </Button>
           </div>
         </div>
         
-        <div className="flex items-center justify-center border border-gray-200 rounded p-4">
+        <div className="flex items-center justify-center bg-white border border-gray-200 rounded p-4">
           {previewUrl ? (
             <img 
               src={previewUrl} 
@@ -240,24 +245,16 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
         <Button
           onClick={downloadImage}
           variant="default"
-          size="sm"
+          size="icon-xs"
         >
-          Descargar PNG
+          <Download />
         </Button>
         <Button
-          onClick={() => {
-            // Regenerar imagen en resolución original
-            const canvas = canvasRef.current;
-            if (!canvas) return;
-            canvas.width = config.width;
-            canvas.height = config.height;
-            drawThumbnail();
-            navigator.clipboard?.writeText(canvas.toDataURL());
-          }}
+          onClick={() => navigator.clipboard?.writeText(previewUrl)}
           variant="outline"
-          size="sm"
+          size="icon-xs"
         >
-          Copiar URL
+          <Copy />
         </Button>
       </div>
     </div>
