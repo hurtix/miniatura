@@ -3,23 +3,23 @@
 
 function createPlaceholderImage(name, colors, text) {
   const canvas = document.createElement('canvas');
-  canvas.width = 800;
-  canvas.height = 450;
+  canvas.width = 600;
+  canvas.height = 420;
   const ctx = canvas.getContext('2d');
   
   // Crear gradiente
-  const gradient = ctx.createLinearGradient(0, 0, 800, 450);
+  const gradient = ctx.createLinearGradient(0, 0, 600, 420);
   gradient.addColorStop(0, colors[0]);
   gradient.addColorStop(1, colors[1]);
   
   // Llenar fondo
   ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 800, 450);
+  ctx.fillRect(0, 0, 600, 420);
   
   // Añadir patrón sutil
   ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-  for (let i = 0; i < 800; i += 100) {
-    for (let j = 0; j < 450; j += 100) {
+  for (let i = 0; i < 600; i += 100) {
+    for (let j = 0; j < 420; j += 100) {
       ctx.fillRect(i, j, 50, 50);
     }
   }
@@ -28,7 +28,7 @@ function createPlaceholderImage(name, colors, text) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   ctx.font = 'bold 48px Open Sans';
   ctx.textAlign = 'center';
-  ctx.fillText(text, 400, 225);
+  ctx.fillText(text, 300, 210);
   
   // Descargar
   const link = document.createElement('a');

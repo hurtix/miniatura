@@ -32,8 +32,8 @@ export const DEFAULT_PRESETS: ThumbnailPreset[] = [
       subtitleBackground: 'rgba(0, 0, 0, 0.2)',
       subtitleBackgroundOpacity: 0.5,
       
-      width: 800,
-      height: 450,
+      width: 600,
+      height: 420,
     }
   },
   {
@@ -67,8 +67,8 @@ export const DEFAULT_PRESETS: ThumbnailPreset[] = [
       subtitleBackground: 'rgba(0, 0, 0, 0.3)',
       subtitleBackgroundOpacity: 0.6,
       
-      width: 800,
-      height: 450,
+      width: 600,
+      height: 420,
     }
   },
   {
@@ -102,8 +102,8 @@ export const DEFAULT_PRESETS: ThumbnailPreset[] = [
       subtitleBackground: 'rgba(0, 0, 0, 0.15)',
       subtitleBackgroundOpacity: 0.4,
       
-      width: 800,
-      height: 450,
+      width: 600,
+      height: 420,
     }
   }
 ];
