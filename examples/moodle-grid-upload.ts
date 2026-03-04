@@ -158,8 +158,8 @@ export function ExampleUsage() {
 
       // 2. Subir cada imagen a su respectiva sección en Moodle
       const uploadPromises = generatedSet.images
-        .filter((img: any) => img.type === 'unit') // Solo las unidades
-        .map(async (img: any, index: number) => {
+        .filter((img: { type: string }) => img.type === 'unit') // Solo las unidades
+        .map(async (img: { dataUrl: string; type: string }, index: number) => {
           // Mapear el índice de la imagen con la sección correspondiente
           const selectedSection = courseData.selectedSections
             .filter(s => s.selected)[index];

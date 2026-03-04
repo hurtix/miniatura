@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ThumbnailConfig } from '@/types/thumbnail';
 import { Button } from '@/components/ui/button';
 import { Clipboard, ClipboardCopyIcon, Copy, Download, ZoomIn, ZoomOut } from 'lucide-react';
@@ -15,122 +15,23 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [previewScale, setPreviewScale] = useState<1 | 2>(1); // 1x = 200x140, 2x = 400x280
 
-  useEffect(() => {
-    drawThumbnail();
-  }, [config, previewScale]);
-
-  const drawFullSizeThumbnail = async (targetCanvas?: HTMLCanvasElement) => {
-    const canvas = targetCanvas || canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Configurar canvas para tamaño completo (600x420)
-    canvas.width = 600;
-    canvas.height = 420;
-
-    // Limpiar canvas
-    ctx.clearRect(0, 0, 600, 420);
-
-    // Dibujar imagen de fondo si existe
-    if (config.backgroundImage) {
-      try {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => {
-            // Dibujar imagen de fondo ajustada al tamaño del canvas
-            ctx.globalAlpha = 1;
-            ctx.drawImage(img, 0, 0, 600, 420);
-            ctx.globalAlpha = 1;
-            resolve();
-          };
-          img.onerror = () => {
-            // Si falla la carga, usar color de fondo por defecto
-            console.warn('No se pudo cargar la imagen de fondo:', config.backgroundImage);
-            ctx.fillStyle = '#f3f4f6';
-            ctx.fillRect(0, 0, 600, 420);
-            resolve();
-          };
-          img.src = config.backgroundImage!;
-        });
-      } catch (error) {
-        // Fallback en caso de error
-        ctx.fillStyle = '#f3f4f6';
-        ctx.fillRect(0, 0, 600, 420);
-      }
-    } else {
-      // Fondo por defecto si no hay imagen
-      ctx.fillStyle = '#f3f4f6';
-      ctx.fillRect(0, 0, 600, 420);
-    }
-
-    // Dibujar overlay
-    ctx.fillStyle = hexToRgba(config.overlayColor, config.overlayOpacity);
-    ctx.fillRect(0, 0, 600, 420);
-
-    // Configurar texto
-    ctx.textBaseline = 'top';
-
-    // Calcular área de texto combinada
-    const titleMetrics = measureText(ctx, config.title, config.titleSize, config.titleFont, config.titleWeight);
-    const subtitleMetrics = measureText(ctx, config.subtitle, config.subtitleSize, config.subtitleFont, config.subtitleWeight);
-    
-    // Calcular posición del contenedor de texto
-    const containerY = (config.titlePosition.y / 100) * 420;
-    const containerPadding = 20;
-    const textSpacing = 10;
-    
-    // Altura total del contenedor: título + espacio + subtítulo + padding
-    const containerHeight = config.titleSize + textSpacing + config.subtitleSize + (containerPadding * 2);
-    
-    // Dibujar fondo del contenedor de texto (ancho completo)
-    if (config.titleBackground && config.titleBackgroundOpacity > 0) {
-      ctx.fillStyle = config.titleBackground;
-      ctx.globalAlpha = config.titleBackgroundOpacity;
-      ctx.fillRect(
-        0, // Ancho completo
-        containerY - containerPadding,
-        600, // Ancho completo
-        containerHeight
-      );
-      ctx.globalAlpha = 1;
-    }
-
-    // Calcular posición X según alineación del título (subtítulo usa la misma)
-    let titleX = containerPadding;
-    let subtitleX = containerPadding;
-    
-    // Dibujar título
-    ctx.fillStyle = config.titleColor;
-    ctx.font = `${config.titleWeight} ${config.titleSize}px ${config.titleFont}`;
-    
-    if (config.titlePosition.align === 'center') {
-      ctx.textAlign = 'center';
-      titleX = 600 / 2;
-      subtitleX = 600 / 2;
-    } else if (config.titlePosition.align === 'right') {
-      ctx.textAlign = 'right';
-      titleX = 600 - containerPadding;
-      subtitleX = 600 - containerPadding;
-    } else {
-      ctx.textAlign = 'left';
-      titleX = containerPadding;
-      subtitleX = containerPadding;
-    }
-    
-    ctx.fillText(config.title, titleX, containerY);
-
-    // Dibujar subtítulo (misma alineación que el título)
-    ctx.fillStyle = config.subtitleColor;
-    ctx.font = `${config.subtitleWeight} ${config.subtitleSize}px ${config.subtitleFont}`;
-    
-    ctx.fillText(config.subtitle, subtitleX, containerY + config.titleSize + textSpacing);
+  const hexToRgba = (hex: string, opacity: number): string => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
-  const drawThumbnail = async () => {
+  const measureText = (ctx: CanvasRenderingContext2D, text: string, size: number, font: string, weight: number) => {
+    ctx.font = `${weight} ${size}px ${font}`;
+    const metrics = ctx.measureText(text);
+    return {
+      width: metrics.width,
+      height: metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+    };
+  };
+
+  const drawThumbnail = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -261,6 +162,121 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     // Generar URL de preview
     const dataUrl = canvas.toDataURL('image/png');
     setPreviewUrl(dataUrl);
+  }, [config, previewScale]);
+
+  useEffect(() => {
+    drawThumbnail();
+  }, [drawThumbnail]);
+
+  const drawFullSizeThumbnail = async (targetCanvas?: HTMLCanvasElement) => {
+    const canvas = targetCanvas || canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Configurar canvas para tamaño completo (600x420)
+    canvas.width = 600;
+    canvas.height = 420;
+
+    // Limpiar canvas
+    ctx.clearRect(0, 0, 600, 420);
+
+    // Dibujar imagen de fondo si existe
+    if (config.backgroundImage) {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            // Dibujar imagen de fondo ajustada al tamaño del canvas
+            ctx.globalAlpha = 1;
+            ctx.drawImage(img, 0, 0, 600, 420);
+            ctx.globalAlpha = 1;
+            resolve();
+          };
+          img.onerror = () => {
+            // Si falla la carga, usar color de fondo por defecto
+            console.warn('No se pudo cargar la imagen de fondo:', config.backgroundImage);
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, 600, 420);
+            resolve();
+          };
+          img.src = config.backgroundImage!;
+        });
+      } catch (error) {
+        // Fallback en caso de error
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(0, 0, 600, 420);
+      }
+    } else {
+      // Fondo por defecto si no hay imagen
+      ctx.fillStyle = '#f3f4f6';
+      ctx.fillRect(0, 0, 600, 420);
+    }
+
+    // Dibujar overlay
+    ctx.fillStyle = hexToRgba(config.overlayColor, config.overlayOpacity);
+    ctx.fillRect(0, 0, 600, 420);
+
+    // Configurar texto
+    ctx.textBaseline = 'top';
+
+    // Calcular área de texto combinada
+    const titleMetrics = measureText(ctx, config.title, config.titleSize, config.titleFont, config.titleWeight);
+    const subtitleMetrics = measureText(ctx, config.subtitle, config.subtitleSize, config.subtitleFont, config.subtitleWeight);
+    
+    // Calcular posición del contenedor de texto
+    const containerY = (config.titlePosition.y / 100) * 420;
+    const containerPadding = 20;
+    const textSpacing = 10;
+    
+    // Altura total del contenedor: título + espacio + subtítulo + padding
+    const containerHeight = config.titleSize + textSpacing + config.subtitleSize + (containerPadding * 2);
+    
+    // Dibujar fondo del contenedor de texto (ancho completo)
+    if (config.titleBackground && config.titleBackgroundOpacity > 0) {
+      ctx.fillStyle = config.titleBackground;
+      ctx.globalAlpha = config.titleBackgroundOpacity;
+      ctx.fillRect(
+        0, // Ancho completo
+        containerY - containerPadding,
+        600, // Ancho completo
+        containerHeight
+      );
+      ctx.globalAlpha = 1;
+    }
+
+    // Calcular posición X según alineación del título (subtítulo usa la misma)
+    let titleX = containerPadding;
+    let subtitleX = containerPadding;
+    
+    // Dibujar título
+    ctx.fillStyle = config.titleColor;
+    ctx.font = `${config.titleWeight} ${config.titleSize}px ${config.titleFont}`;
+    
+    if (config.titlePosition.align === 'center') {
+      ctx.textAlign = 'center';
+      titleX = 600 / 2;
+      subtitleX = 600 / 2;
+    } else if (config.titlePosition.align === 'right') {
+      ctx.textAlign = 'right';
+      titleX = 600 - containerPadding;
+      subtitleX = 600 - containerPadding;
+    } else {
+      ctx.textAlign = 'left';
+      titleX = containerPadding;
+      subtitleX = containerPadding;
+    }
+    
+    ctx.fillText(config.title, titleX, containerY);
+
+    // Dibujar subtítulo (misma alineación que el título)
+    ctx.fillStyle = config.subtitleColor;
+    ctx.font = `${config.subtitleWeight} ${config.subtitleSize}px ${config.subtitleFont}`;
+    
+    ctx.fillText(config.subtitle, subtitleX, containerY + config.titleSize + textSpacing);
   };
 
   const measureText = (ctx: CanvasRenderingContext2D, text: string, size: number, font: string, weight: number) => {
@@ -271,13 +287,6 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
       height: size, // Aproximación
       metrics
     };
-  };
-
-  const hexToRgba = (hex: string, opacity: number): string => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
   const downloadImage = async () => {

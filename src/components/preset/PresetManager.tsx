@@ -97,22 +97,26 @@ export function PresetManager({ config, onChange }: PresetManagerProps) {
 
   // Cargar presets desde localStorage o usar los iniciales
   useEffect(() => {
-    const savedPresets = localStorage.getItem('allPresets');
-    if (savedPresets) {
-      try {
-        const allPresets = JSON.parse(savedPresets);
-        setPresets(allPresets);
-      } catch (error) {
-        console.error('Error loading presets:', error);
-        // Si hay error, usar presets iniciales pero no sobrescribir localStorage
-        setPresets(initialPresets as ThumbnailPreset[]);
+    const loadPresets = () => {
+      const savedPresets = localStorage.getItem('allPresets');
+      if (savedPresets) {
+        try {
+          const allPresets = JSON.parse(savedPresets);
+          setPresets(allPresets);
+        } catch (error) {
+          console.error('Error loading presets:', error);
+          // Si hay error, usar presets iniciales pero no sobrescribir localStorage
+          setPresets(initialPresets as ThumbnailPreset[]);
+        }
+      } else {
+        // Primera vez, inicializar con presets por defecto
+        const initialPresetsArray = initialPresets as ThumbnailPreset[];
+        setPresets(initialPresetsArray);
+        localStorage.setItem('allPresets', JSON.stringify(initialPresetsArray));
       }
-    } else {
-      // Primera vez, inicializar con presets por defecto
-      const initialPresetsArray = initialPresets as ThumbnailPreset[];
-      setPresets(initialPresetsArray);
-      localStorage.setItem('allPresets', JSON.stringify(initialPresetsArray));
-    }
+    };
+    
+    loadPresets();
   }, []);
 
   // Guardar todos los presets en localStorage

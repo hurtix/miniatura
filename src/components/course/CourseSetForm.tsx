@@ -471,7 +471,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                       <p className="text-sm text-blue-700">
-                        Cargando secciones de "{selectedCourse.fullname}"...
+                        Cargando secciones de &quot;{selectedCourse.fullname}&quot;...
                       </p>
                     </div>
                   </div>

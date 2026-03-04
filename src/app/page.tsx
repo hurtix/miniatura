@@ -11,7 +11,7 @@ import initialPresets from '@/config/presets.json';
 import type { ThumbnailConfig, GenerateSetResponse } from '@/types/thumbnail';
 
 export default function Home() {
-  const [config, setConfig] = useState<ThumbnailConfig>((initialPresets as any)[0].config);
+  const [config, setConfig] = useState<ThumbnailConfig>((initialPresets as { config: ThumbnailConfig }[])[0].config);
   const [activeTab, setActiveTab] = useState('presets');
 
   const handleConfigChange = (newConfig: ThumbnailConfig) => {

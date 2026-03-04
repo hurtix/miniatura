@@ -60,7 +60,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
     },
   });
 
-  const handleFieldChange = (field: keyof ConfigForm, value: any) => {
+  const handleFieldChange = (field: keyof ConfigForm, value: string | number | boolean) => {
     form.setValue(field, value);
     const newConfig = { ...config, [field]: value };
     onChange(newConfig);
@@ -68,7 +68,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
 
   const handlePositionChange = (type: 'title' | 'subtitle', axis: 'x' | 'y', value: number) => {
     const positionKey = `${type}Position` as keyof ThumbnailConfig;
-    const currentPosition = config[positionKey] as any;
+    const currentPosition = config[positionKey] as { x: number; y: number; align: string };
     const newPosition = { ...currentPosition, [axis]: value };
     const newConfig = { ...config, [positionKey]: newPosition };
     onChange(newConfig);
@@ -76,7 +76,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
 
   const handleAlignChange = (type: 'title' | 'subtitle', align: 'left' | 'center' | 'right') => {
     const positionKey = `${type}Position` as keyof ThumbnailConfig;
-    const currentPosition = config[positionKey] as any;
+    const currentPosition = config[positionKey] as { x: number; y: number; align: string };
     const newPosition = { ...currentPosition, align };
     const newConfig = { ...config, [positionKey]: newPosition };
     onChange(newConfig);
@@ -94,7 +94,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(initialPresets as any).map((preset: any) => (
+            {(initialPresets as { id: string; name: string; config: ThumbnailConfig }[]).map((preset: { id: string; name: string; config: ThumbnailConfig }) => (
               <div
                 key={preset.id}
                 onClick={() => onPresetSelect(preset.id)}

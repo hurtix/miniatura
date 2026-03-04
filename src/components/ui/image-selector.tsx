@@ -53,16 +53,22 @@ export function ImageSelector({ value, onChange, presetId, className = '' }: Ima
           }
           return acc;
         }, []);
-        setCustomImages(uniqueImages);
-        // Guardar la versión limpia
-        if (uniqueImages.length !== images.length) {
-          localStorage.setItem(`customBackgroundImages_${presetId}`, JSON.stringify(uniqueImages));
-        }
+        
+        const loadImages = () => {
+          setCustomImages(uniqueImages);
+          // Guardar la versión limpia
+          if (uniqueImages.length !== images.length) {
+            localStorage.setItem(`customBackgroundImages_${presetId}`, JSON.stringify(uniqueImages));
+          }
+        };
+        
+        loadImages();
       } catch (error) {
         console.error('Error loading custom images:', error);
         // Si hay error, limpiar el localStorage corrupto
         localStorage.removeItem(`customBackgroundImages_${presetId}`);
-        setCustomImages([]);
+        const clearImages = () => setCustomImages([]);
+        clearImages();
       }
     }
   }, [presetId]);

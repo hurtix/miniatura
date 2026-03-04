@@ -37,7 +37,7 @@ function getMoodleConfig(): MoodleConfig & { searchToken?: string; gridToken?: s
  */
 async function callMoodleAPI<T>(
   wsfunction: string, 
-  params: Record<string, any> = {},
+  params: Record<string, string | number | boolean> = {},
   useSpecificToken?: 'search' | 'grid'
 ): Promise<T> {
   const config = getMoodleConfig();
@@ -208,7 +208,7 @@ export async function searchCourses(searchTerm: string = '', limit: number = 20)
       ? [{ key: 'search', value: searchTerm.trim() }]
       : [];
 
-    const response = await callMoodleAPI<{ courses: MoodleCourse[], warnings?: any[] }>(
+    const response = await callMoodleAPI<{ courses: MoodleCourse[], warnings?: unknown[] }>(
       'core_course_search_courses',
       { 
         criterianame: 'search',
