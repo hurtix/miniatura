@@ -32,8 +32,12 @@ interface CourseSetFormProps {
 interface MoodleSectionsResponse {
   success: boolean;
   courseid: number;
-  sections: string[];
-  count: number;
+  sections: {
+    id: number;
+    name: string;
+    section: number;
+  }[];
+  sectionsCount: number;
 }
 
 interface MoodleSection {
@@ -51,6 +55,15 @@ interface SelectedCourse {
   value: string;
 }
 
+interface MoodleUploadResult {
+  sectionId: string;
+  sectionName: string;
+  success: boolean;
+  error?: string;
+  filename?: string;
+  contenthash?: string;
+}
+
 export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSet, setGeneratedSet] = useState<GenerateSetResponse | null>(null);
@@ -58,6 +71,11 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
   const [moodleSections, setMoodleSections] = useState<MoodleSection[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourse | null>(null);
   const [moodleError, setMoodleError] = useState<string>('');
+  
+  // Estados para la subida a Moodle
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [uploadResults, setUploadResults] = useState<MoodleUploadResult[]>([]);
 
   const {
     register,
@@ -132,9 +150,9 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
       const result: MoodleSectionsResponse = await response.json();
       
       if (result.success && result.sections.length > 0) {
-        const sectionsWithSelection = result.sections.map((section, index) => ({
-          id: `section-${index}`,
-          name: section,
+        const sectionsWithSelection = result.sections.map((section) => ({
+          id: section.id.toString(), // Usar el ID real de Moodle
+          name: section.name,
           selected: true // Por defecto todas seleccionadas
         }));
         setMoodleSections(sectionsWithSelection);
@@ -144,8 +162,8 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
         adjustUnits(result.sections.length);
         
         // Llenar los subtítulos automáticamente
-        result.sections.forEach((sectionName, index) => {
-          setValue(`units.${index}.unitSubtitle`, sectionName);
+        result.sections.forEach((section, index) => {
+          setValue(`units.${index}.unitSubtitle`, section.name);
         });
       } else {
         setMoodleError('No se encontraron secciones en este curso');
@@ -297,6 +315,102 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
         document.body.removeChild(link);
       }, index * 200);
     });
+  };
+
+  const uploadToMoodle = async () => {
+    if (!generatedSet?.success || !selectedCourse || selectedSections.length === 0) {
+      console.error('No hay imágenes generadas, curso seleccionado o secciones para subir');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress('Preparando subida...');
+    setUploadResults([]);
+    
+    try {
+      // Filtrar solo las imágenes de unidades (no presentación ni evaluación)
+      const unitImages = generatedSet.images.filter(img => img.type === 'unit');
+      const results: MoodleUploadResult[] = [];
+      
+      for (let index = 0; index < unitImages.length; index++) {
+        const image = unitImages[index];
+        const section = selectedSections[index];
+        
+        if (!section) continue;
+        
+        setUploadProgress(`Subiendo imagen ${index + 1} de ${unitImages.length}: ${section.name}`);
+        
+        try {
+          // Descargar la imagen generada como Blob
+          const response = await fetch(image.imageUrl);
+          if (!response.ok) {
+            throw new Error(`Error al descargar imagen: ${response.status}`);
+          }
+          
+          const imageBlob = await response.blob();
+          
+          // Crear FormData para el upload
+          const formData = new FormData();
+          formData.append('courseId', selectedCourse.id.toString());
+          formData.append('sectionId', section.id.toString()); // Convertir explícitamente a string
+          formData.append('image', imageBlob, `unidad_${image.unitNumber}_${section.name.replace(/\s+/g, '_')}.png`);
+          
+          // Subir a Moodle
+          const uploadResponse = await fetch('/api/update-grid-image', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          const uploadResult = await uploadResponse.json();
+          
+          if (uploadResponse.ok && uploadResult.success) {
+            results.push({
+              sectionId: section.id,
+              sectionName: section.name,
+              success: true,
+              filename: uploadResult.data?.filename,
+              contenthash: uploadResult.data?.contenthash,
+            });
+          } else {
+            results.push({
+              sectionId: section.id,
+              sectionName: section.name,
+              success: false,
+              error: uploadResult.error || 'Error desconocido en la subida',
+            });
+          }
+        } catch (error) {
+          console.error(`Error uploading to section ${section.name}:`, error);
+          results.push({
+            sectionId: section.id,
+            sectionName: section.name,
+            success: false,
+            error: error instanceof Error ? error.message : 'Error desconocido',
+          });
+        }
+        
+        // Pequeña pausa entre uploads
+        if (index < unitImages.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+      
+      setUploadResults(results);
+      
+      const successful = results.filter(r => r.success).length;
+      const failed = results.length - successful;
+      
+      if (failed === 0) {
+        setUploadProgress(`✅ Subida completada: ${successful} imágenes subidas exitosamente`);
+      } else {
+        setUploadProgress(`⚠️ Subida completada: ${successful} exitosas, ${failed} fallidas`);
+      }
+    } catch (error) {
+      console.error('Error general en la subida:', error);
+      setUploadProgress('❌ Error en el proceso de subida');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -663,10 +777,86 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                     <h3 className="text-lg font-semibold text-green-700">
                       Conjunto generado exitosamente
                     </h3>
-                    <Button onClick={downloadAll} variant="outline">
-                      Descargar Todas ({generatedSet.images.length})
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button onClick={downloadAll} variant="outline">
+                        Descargar Todas ({generatedSet.images.length})
+                      </Button>
+                      
+                      {/* Botón de subir a Moodle - solo si hay curso y secciones seleccionadas */}
+                      {selectedCourse && selectedSections.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                          <Button 
+                            onClick={uploadToMoodle} 
+                            variant="default"
+                            disabled={isUploading}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            {isUploading ? (
+                              <>
+                                <span className="animate-spin mr-2">⏳</span>
+                                Subiendo...
+                              </>
+                            ) : (
+                              <>
+                                📤 Subir a Moodle ({selectedSections.length} secciones)
+                              </>
+                            )}
+                          </Button>
+                          
+                          {/* Nota informativa sobre compatibilidad */}
+                          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                            <strong>Nota:</strong> La actualización automática de grid depende de la configuración de tu Moodle. 
+                            En algunos casos podrías necesitar aplicar manualmente las imágenes desde el área de borradores.
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Progreso de subida a Moodle */}
+                  {isUploading && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                        <div>
+                          <p className="font-medium text-blue-900">Subiendo a Moodle</p>
+                          <p className="text-sm text-blue-600">{uploadProgress}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Resultados de subida a Moodle */}
+                  {uploadResults.length > 0 && (
+                    <div className="bg-gray-50 border rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-900 mb-3">
+                        Resultados de subida a Moodle:
+                      </h4>
+                      <div className="space-y-2">
+                        {uploadResults.map((result, index) => (
+                          <div key={index} className={`flex items-center justify-between p-2 rounded ${
+                            result.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            <div>
+                              <span className="font-medium">{result.sectionName}</span>
+                              {result.success && result.filename && (
+                                <span className="text-sm ml-2">({result.filename})</span>
+                              )}
+                            </div>
+                          <div className="text-sm">
+                              {result.success ? '✅ Exitoso' : `❌ ${result.error}`}
+                            </div>  
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {!isUploading && (
+                        <div className="mt-3 p-2 bg-white rounded border">
+                          <p className="text-sm text-gray-600">{uploadProgress}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {generatedSet.images.map((image, index) => (

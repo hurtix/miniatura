@@ -87,3 +87,30 @@ export interface CourseSection {
   name: string;
   section: number;
 }
+
+// Tipos para la funcionalidad de upload de imágenes
+export interface MoodleUploadResponse {
+  itemid: number;
+  contextid?: number;
+  component?: string;
+  filearea?: string;
+  filename?: string;
+  filepath?: string;
+  filesize?: number;
+  mimetype?: string;
+  timemodified?: number;
+}
+
+export interface MoodleGridImageResponse {
+  status: boolean;
+  filename: string;
+  contenthash: string;
+  message?: string; // Campo opcional para mensajes informativos
+}
+
+export interface MoodleUploadParams {
+  courseId: number;
+  sectionId: number;
+  imageBuffer: Buffer;
+  filename: string;
+}

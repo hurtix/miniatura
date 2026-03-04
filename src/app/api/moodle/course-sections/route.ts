@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCourseSections, getCourseInfo } from '@/lib/moodle';
+import { getCourseSections, getCourseInfo, getCourseSectionsDetailed } from '@/lib/moodle';
 import { z } from 'zod';
 
 // Schema de validación para los parámetros
@@ -34,13 +34,13 @@ export async function GET(request: NextRequest) {
 
     const { courseid } = parseResult.data;
 
-    // Obtener información del curso
-    const courseInfo = await getCourseInfo(courseid);
+    // Obtener información del curso con IDs reales de secciones
+    const sectionsDetailed = await getCourseSectionsDetailed(courseid);
     
-    if (!courseInfo.isValid) {
+    if (sectionsDetailed.length === 0) {
       return NextResponse.json(
         { 
-          error: 'Course not found or not accessible',
+          error: 'No sections found in this course',
           courseid 
         },
         { status: 404 }
@@ -50,8 +50,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       courseid,
-      sectionsCount: courseInfo.sectionsCount,
-      sections: courseInfo.sectionNames
+      sectionsCount: sectionsDetailed.length,
+      sections: sectionsDetailed.map(section => ({
+        id: section.id,
+        name: section.name,
+        section: section.section
+      }))
     });
 
   } catch (error) {
