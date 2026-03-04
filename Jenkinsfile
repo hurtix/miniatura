@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'node:20-alpine'
+            image 'node:20-slim'
             args '-u root:root'
         }
     }
@@ -23,28 +23,28 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    # Instalar herramientas del sistema necesarias
-                    apk add --no-cache \
+                    # Actualizar repositorios y instalar dependencias del sistema
+                    apt-get update && apt-get install -y \
                         rsync \
                         openssh-client \
                         python3 \
-                        py3-pip \
-                        make \
-                        g++ \
-                        pkgconfig \
-                        cairo-dev \
-                        jpeg-dev \
-                        pango-dev \
-                        giflib-dev \
-                        librsvg-dev \
-                        pixman-dev \
-                        pangomm-dev
+                        python3-pip \
+                        build-essential \
+                        libcairo2-dev \
+                        libpango1.0-dev \
+                        libjpeg-dev \
+                        libgif-dev \
+                        librsvg2-dev \
+                        libpixman-1-dev
                     
                     # Verificar que Python está disponible
                     python3 --version
                     
-                    # Instalar dependencias del proyecto
-                    npm ci --production
+                    # Instalar dependencias del proyecto con timeout
+                    timeout 600 npm ci --omit=dev || {
+                        echo "npm ci falló, intentando npm install..."
+                        npm install --omit=dev --production
+                    }
                 '''
             }
         }
