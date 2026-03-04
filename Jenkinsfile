@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:20-alpine'
+            args '-u root:root'
+        }
+    }
     
     environment {
         NODE_VERSION = '20'
@@ -17,7 +22,13 @@ pipeline {
     stages {        
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci --production'
+                sh '''
+                    # Instalar herramientas necesarias para deploy
+                    apk add --no-cache rsync openssh-client
+                    
+                    # Instalar dependencias del proyecto
+                    npm ci --production
+                '''
             }
         }
         
