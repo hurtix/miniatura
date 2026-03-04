@@ -40,11 +40,8 @@ pipeline {
                     # Verificar que Python está disponible
                     python3 --version
                     
-                    # Instalar dependencias del proyecto con timeout
-                    timeout 600 npm ci --omit=dev || {
-                        echo "npm ci falló, intentando npm install..."
-                        npm install --omit=dev --production
-                    }
+                    # Instalar todas las dependencias (incluidas dev para TypeScript)
+                    npm ci
                 '''
             }
         }
@@ -85,8 +82,8 @@ pipeline {
                                 cp .env.production.example .env.production
                                 echo 'Configurar .env.production con tus valores reales'
                                 
-                                # Instalar dependencias
-                                npm ci --production
+                                # Instalar dependencias de producción solamente en el VPS
+                                npm ci --omit=dev
                                 
                                 # Build de producción
                                 npm run build
