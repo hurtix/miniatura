@@ -10,8 +10,8 @@ pipeline {
         NODE_VERSION = '20'
         PROJECT_NAME = 'miniatura'
         
-        // ⚠️ CAMBIAR ESTA RUTA para que NO sobrescriba tu otro proyecto
-        DEPLOY_PATH = '/www/wwwroot/miniatura'  // Nueva ruta específica para este proyecto
+        // ✅ Ruta correcta en el servidor
+        DEPLOY_PATH = '/www/wwwroot/unicauca/miniatura'
         
         // ✅ Usar credenciales que ya tienes configuradas
         VPS_HOST = '209.126.4.141'  // Cambiar por tu IP real
