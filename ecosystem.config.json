@@ -7,7 +7,7 @@
     "exec_mode": "fork",
     "env": {
       "NODE_ENV": "production",
-      "PORT": "3001"
+      "PORT": "3002"
     },
     "env_file": ".env.production",
     "log_date_format": "YYYY-MM-DD HH:mm:ss",

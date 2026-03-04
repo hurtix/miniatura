@@ -4,7 +4,14 @@ pipeline {
     environment {
         NODE_VERSION = '20'
         PROJECT_NAME = 'miniatura'
-        DEPLOY_PATH = '/www/wwwroot/unicauca/miniatura'
+        
+        // ⚠️ CAMBIAR ESTA RUTA para que NO sobrescriba tu otro proyecto
+        DEPLOY_PATH = '/www/wwwroot/miniatura'  // Nueva ruta específica para este proyecto
+        
+        // ✅ Usar credenciales que ya tienes configuradas
+        VPS_HOST = '209.126.4.141'  // Cambiar por tu IP real
+        VPS_USER = 'root'  
+        SSH_CREDENTIALS = 'vps-ssh'  // ✅ Usar el ID que ya tienes
     }
     
     stages {
@@ -35,32 +42,46 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Copiar archivos al servidor de producción
-                    sh """
-                        rsync -avz --delete \
-                        --exclude=node_modules \
-                        --exclude=.git \
-                        --exclude=.next/cache \
-                        ./ ${DEPLOY_PATH}/
-                    """
-                    
-                    // Instalar dependencias y build en producción
-                    sh """
-                        cd ${DEPLOY_PATH}
-                        npm ci --production
-                        npm run build
-                    """
-                    
-                    // Reiniciar aplicación
-                    sh """
-                        cd ${DEPLOY_PATH}
-                        if command -v pm2 >/dev/null 2>&1; then
-                            pm2 restart ${PROJECT_NAME}-app || pm2 start ecosystem.config.json
-                        else
-                            # Reinicio manual requerido
-                            echo "Reinicia la aplicación manualmente en aaPanel"
-                        fi
-                    """
+                    // Usar credenciales SSH configuradas en Jenkins
+                    sshagent(credentials: [env.SSH_CREDENTIALS]) {
+                        // Copiar archivos al servidor VPS
+                        sh """
+                            rsync -avz --delete \
+                            --exclude=node_modules \
+                            --exclude=.git \
+                            --exclude=.next/cache \
+                            --exclude=logs \
+                            ./ ${VPS_USER}@${VPS_HOST}:${DEPLOY_PATH}/
+                        """
+                        
+                        // Ejecutar comandos en el VPS remoto
+                        sh """
+                            ssh ${VPS_USER}@${VPS_HOST} "
+                                cd ${DEPLOY_PATH}
+                                
+                                # Copiar variables de entorno
+                                cp .env.production.example .env.production
+                                echo 'Configurar .env.production con tus valores reales'
+                                
+                                # Instalar dependencias
+                                npm ci --production
+                                
+                                # Build de producción
+                                npm run build
+                                
+                                # Reiniciar aplicación
+                                if command -v pm2 >/dev/null 2>&1; then
+                                    pm2 restart ${PROJECT_NAME}-app || pm2 start ecosystem.config.json
+                                else
+                                    echo 'Reinicia manualmente en aaPanel Node.js Project'
+                                fi
+                                
+                                # Verificar que la aplicación esté funcionando
+                                sleep 5
+                                curl -f http://localhost:3002/ || echo 'Aplicación no responde - verificar logs'
+                            "
+                        """
+                    }
                 }
             }
         }
@@ -68,10 +89,13 @@ pipeline {
     
     post {
         success {
-            echo 'Deploy exitoso!'
+            echo '🎉 Deploy exitoso!'
+            echo "✅ Aplicación desplegada en: ${VPS_HOST}:3002"
+            echo "🔧 Recuerda configurar .env.production en el servidor"
         }
         failure {
-            echo 'Deploy falló. Revisa los logs.'
+            echo '💥 Deploy falló. Revisa los logs arriba.'
+            echo '🔍 Verifica: SSH credentials, VPS accessible, dependencias del sistema'
         }
         always {
             cleanWs()
