@@ -440,6 +440,7 @@ export function PresetManager({ config, onChange }: PresetManagerProps) {
                     const newConfig = { ...config, backgroundImage: imageUrl };
                     handleConfigChange(newConfig);
                   }}
+                  presetId={selectedPreset?.id || 'default'}
                 />
 
                 <div className="space-y-2">

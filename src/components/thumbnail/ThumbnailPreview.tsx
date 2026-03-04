@@ -19,6 +19,117 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     drawThumbnail();
   }, [config, previewScale]);
 
+  const drawFullSizeThumbnail = async (targetCanvas?: HTMLCanvasElement) => {
+    const canvas = targetCanvas || canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Configurar canvas para tamaño completo (600x420)
+    canvas.width = 600;
+    canvas.height = 420;
+
+    // Limpiar canvas
+    ctx.clearRect(0, 0, 600, 420);
+
+    // Dibujar imagen de fondo si existe
+    if (config.backgroundImage) {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            // Dibujar imagen de fondo ajustada al tamaño del canvas
+            ctx.globalAlpha = 1;
+            ctx.drawImage(img, 0, 0, 600, 420);
+            ctx.globalAlpha = 1;
+            resolve();
+          };
+          img.onerror = () => {
+            // Si falla la carga, usar color de fondo por defecto
+            console.warn('No se pudo cargar la imagen de fondo:', config.backgroundImage);
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, 600, 420);
+            resolve();
+          };
+          img.src = config.backgroundImage!;
+        });
+      } catch (error) {
+        // Fallback en caso de error
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(0, 0, 600, 420);
+      }
+    } else {
+      // Fondo por defecto si no hay imagen
+      ctx.fillStyle = '#f3f4f6';
+      ctx.fillRect(0, 0, 600, 420);
+    }
+
+    // Dibujar overlay
+    ctx.fillStyle = hexToRgba(config.overlayColor, config.overlayOpacity);
+    ctx.fillRect(0, 0, 600, 420);
+
+    // Configurar texto
+    ctx.textBaseline = 'top';
+
+    // Calcular área de texto combinada
+    const titleMetrics = measureText(ctx, config.title, config.titleSize, config.titleFont, config.titleWeight);
+    const subtitleMetrics = measureText(ctx, config.subtitle, config.subtitleSize, config.subtitleFont, config.subtitleWeight);
+    
+    // Calcular posición del contenedor de texto
+    const containerY = (config.titlePosition.y / 100) * 420;
+    const containerPadding = 20;
+    const textSpacing = 10;
+    
+    // Altura total del contenedor: título + espacio + subtítulo + padding
+    const containerHeight = config.titleSize + textSpacing + config.subtitleSize + (containerPadding * 2);
+    
+    // Dibujar fondo del contenedor de texto (ancho completo)
+    if (config.titleBackground && config.titleBackgroundOpacity > 0) {
+      ctx.fillStyle = config.titleBackground;
+      ctx.globalAlpha = config.titleBackgroundOpacity;
+      ctx.fillRect(
+        0, // Ancho completo
+        containerY - containerPadding,
+        600, // Ancho completo
+        containerHeight
+      );
+      ctx.globalAlpha = 1;
+    }
+
+    // Calcular posición X según alineación del título (subtítulo usa la misma)
+    let titleX = containerPadding;
+    let subtitleX = containerPadding;
+    
+    // Dibujar título
+    ctx.fillStyle = config.titleColor;
+    ctx.font = `${config.titleWeight} ${config.titleSize}px ${config.titleFont}`;
+    
+    if (config.titlePosition.align === 'center') {
+      ctx.textAlign = 'center';
+      titleX = 600 / 2;
+      subtitleX = 600 / 2;
+    } else if (config.titlePosition.align === 'right') {
+      ctx.textAlign = 'right';
+      titleX = 600 - containerPadding;
+      subtitleX = 600 - containerPadding;
+    } else {
+      ctx.textAlign = 'left';
+      titleX = containerPadding;
+      subtitleX = containerPadding;
+    }
+    
+    ctx.fillText(config.title, titleX, containerY);
+
+    // Dibujar subtítulo (misma alineación que el título)
+    ctx.fillStyle = config.subtitleColor;
+    ctx.font = `${config.subtitleWeight} ${config.subtitleSize}px ${config.subtitleFont}`;
+    
+    ctx.fillText(config.subtitle, subtitleX, containerY + config.titleSize + textSpacing);
+  };
+
   const drawThumbnail = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -169,18 +280,14 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
-  const downloadImage = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Regenerar imagen en resolución original para descarga
-    canvas.width = config.width;
-    canvas.height = config.height;
-    drawThumbnail(); // Esto actualizará el canvas con la imagen original
+  const downloadImage = async () => {
+    // Crear un canvas temporal para la descarga en tamaño completo
+    const downloadCanvas = document.createElement('canvas');
+    await drawFullSizeThumbnail(downloadCanvas);
 
     const link = document.createElement('a');
     link.download = `miniatura-${Date.now()}.png`;
-    link.href = canvas.toDataURL();
+    link.href = downloadCanvas.toDataURL('image/png');
     link.click();
   };
 

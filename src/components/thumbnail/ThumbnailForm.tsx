@@ -170,6 +170,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
                 <ImageSelector
                   value={config.backgroundImage}
                   onChange={(imageUrl) => handleFieldChange('backgroundImage', imageUrl)}
+                  presetId="individual"
                 />
 
 

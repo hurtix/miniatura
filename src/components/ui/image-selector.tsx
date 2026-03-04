@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Upload, X, Check } from 'lucide-react';
+import { Upload, X, Check, Trash2 } from 'lucide-react';
 
 interface ImageOption {
   id: string;
@@ -18,6 +18,7 @@ interface ImageOption {
 interface ImageSelectorProps {
   value: string | null;
   onChange: (imageUrl: string | null) => void;
+  presetId: string; // ID del preset actual
   className?: string;
 }
 
@@ -25,27 +26,50 @@ const DEFAULT_IMAGES: ImageOption[] = [
   { id: 'ia', name: 'IA', url: '/backgrounds/ia.jpg', isDefault: true },
 ];
 
-export function ImageSelector({ value, onChange, className = '' }: ImageSelectorProps) {
+export function ImageSelector({ value, onChange, presetId, className = '' }: ImageSelectorProps) {
   const [customImages, setCustomImages] = useState<ImageOption[]>([]);
   const [uploadMessage, setUploadMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Cargar imágenes personalizadas desde localStorage
+  // Cargar imágenes personalizadas desde localStorage específico del preset
   useEffect(() => {
-    const savedImages = localStorage.getItem('customBackgroundImages');
+    // Primero, limpiar cualquier imagen del sistema anterior (global)
+    const oldGlobalImages = localStorage.getItem('customBackgroundImages');
+    if (oldGlobalImages) {
+      console.warn('Limpiando imágenes del sistema anterior...');
+      localStorage.removeItem('customBackgroundImages');
+    }
+
+    const savedImages = localStorage.getItem(`customBackgroundImages_${presetId}`);
     if (savedImages) {
       try {
         const images = JSON.parse(savedImages);
-        setCustomImages(images);
+        // Filtrar duplicados por URL y regenerar IDs si es necesario
+        const uniqueImages = images.reduce((acc: ImageOption[], image: ImageOption) => {
+          const exists = acc.find(img => img.url === image.url);
+          if (!exists) {
+            // Asegurar que todas las imágenes personalizadas tengan isDefault: false
+            acc.push({ ...image, isDefault: false });
+          }
+          return acc;
+        }, []);
+        setCustomImages(uniqueImages);
+        // Guardar la versión limpia
+        if (uniqueImages.length !== images.length) {
+          localStorage.setItem(`customBackgroundImages_${presetId}`, JSON.stringify(uniqueImages));
+        }
       } catch (error) {
         console.error('Error loading custom images:', error);
+        // Si hay error, limpiar el localStorage corrupto
+        localStorage.removeItem(`customBackgroundImages_${presetId}`);
+        setCustomImages([]);
       }
     }
-  }, []);
+  }, [presetId]);
 
-  // Guardar imágenes personalizadas en localStorage
+  // Guardar imágenes personalizadas en localStorage específico del preset
   const saveCustomImages = (images: ImageOption[]) => {
-    localStorage.setItem('customBackgroundImages', JSON.stringify(images));
+    localStorage.setItem(`customBackgroundImages_${presetId}`, JSON.stringify(images));
     setCustomImages(images);
   };
 
@@ -94,15 +118,22 @@ export function ImageSelector({ value, onChange, className = '' }: ImageSelector
         ctx.drawImage(img, 0, 0, 600, 420);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
         
-        // Agregar imagen personalizada
+        // Agregar imagen personalizada con ID más único
         const customImage: ImageOption = {
-          id: `custom-${Date.now()}`,
+          id: `custom-${presetId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: file.name.replace(/\.[^/.]+$/, ''), // Quitar extensión
           url: dataUrl,
           isDefault: false
         };
 
         setCustomImages(prev => {
+          // Verificar que no exista ya una imagen con la misma URL
+          const existingImage = prev.find(img => img.url === dataUrl);
+          if (existingImage) {
+            setUploadMessage({ text: 'Esta imagen ya existe', type: 'error' });
+            return prev;
+          }
+          
           const newImages = [...prev, customImage];
           saveCustomImages(newImages);
           return newImages;
@@ -192,7 +223,7 @@ export function ImageSelector({ value, onChange, className = '' }: ImageSelector
             onClick={() => onChange(image.url)}
           >
             <CardContent className="p-2">
-              <div className="relative">
+              <div className="relative group">
                 <img
                   src={image.url}
                   alt={image.name}
@@ -205,15 +236,15 @@ export function ImageSelector({ value, onChange, className = '' }: ImageSelector
                 />
                 {!image.isDefault && (
                   <Button
-                    size="sm"
+                    size="icon-xs"
                     variant="destructive"
-                    className="absolute top-1 right-1 w-6 h-6 p-0"
+                    className="absolute -top-4 -right-1 opacity-80 hover:opacity-100 transition-opacity shadow-lg"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemoveCustomImage(image.id);
                     }}
                   >
-                    <X className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 )}
               </div>
