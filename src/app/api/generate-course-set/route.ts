@@ -205,82 +205,79 @@ export async function POST(request: NextRequest) {
     const generatedImages: GenerateSetResponse['images'] = []
     
     try {
-      // 1. Generar miniatura de presentación
-      console.log('Generando presentación...')
-      const presentationConfig = createThumbnailConfig(
-        baseConfig, 
-        'Presentación del curso', 
-        courseName
-      )
+      // Generar miniaturas solo para las secciones seleccionadas
+      console.log(`Generando ${unitCount} secciones seleccionadas...`)
       
-      const presentationCanvas = createCanvas(baseConfig.width, baseConfig.height)
-      const presentationCtx = presentationCanvas.getContext('2d')
-      await drawThumbnail(presentationCanvas, presentationCtx, presentationConfig)
-      
-      const presentationBuffer = presentationCanvas.toBuffer('image/png')
-      const presentationBase64 = `data:image/png;base64,${presentationBuffer.toString('base64')}`
-      const presentationFilename = `${courseName.replace(/[^a-zA-Z0-9_-]/g, '_')}_presentacion.png`
-      
-      generatedImages.push({
-        type: 'presentation',
-        imageUrl: presentationBase64,
-        filename: presentationFilename
-      })
-      
-      // 2. Generar miniaturas de unidades
-      console.log(`Generando ${unitCount} unidades...`)
       for (let i = 0; i < unitCount; i++) {
-        const unitNumber = i + 1
-        const unitTitle = `Unidad ${unitNumber}`
         const unitSubtitle = units[i]?.unitSubtitle || ''
         
-        console.log(`Generando Unidad ${unitNumber}...`)
+        // Determinar el tipo y título según la posición
+        let sectionType: 'presentation' | 'unit' | 'evaluation'
+        let sectionTitle: string
+        let unitNumber: number | undefined
         
-        const unitConfig = createThumbnailConfig(
+        if (unitCount === 1) {
+          // Solo una sección: será presentación
+          sectionType = 'presentation'
+          sectionTitle = 'Presentación del curso'
+        } else if (i === 0) {
+          // Primera sección: presentación
+          sectionType = 'presentation'
+          sectionTitle = 'Presentación del curso'
+        } else if (i === unitCount - 1) {
+          // Última sección: evaluación
+          sectionType = 'evaluation'
+          sectionTitle = 'Módulo de Evaluación'
+        } else {
+          // Secciones intermedias: unidades
+          sectionType = 'unit'
+          sectionTitle = `Unidad ${i}`
+          unitNumber = i
+        }
+        
+        console.log(`Generando ${sectionType}: "${sectionTitle}"`)
+        
+        const sectionConfig = createThumbnailConfig(
           baseConfig,
-          unitTitle,
-          unitSubtitle
+          sectionTitle,
+          sectionType === 'evaluation' ? '' : (sectionType === 'presentation' ? courseName : unitSubtitle)
         )
         
-        const unitCanvas = createCanvas(baseConfig.width, baseConfig.height)
-        const unitCtx = unitCanvas.getContext('2d')
-        await drawThumbnail(unitCanvas, unitCtx, unitConfig)
+        const sectionCanvas = createCanvas(baseConfig.width, baseConfig.height)
+        const sectionCtx = sectionCanvas.getContext('2d')
+        await drawThumbnail(sectionCanvas, sectionCtx, sectionConfig)
         
-        const unitBuffer = unitCanvas.toBuffer('image/png')
-        const unitBase64 = `data:image/png;base64,${unitBuffer.toString('base64')}`
-        const unitFilename = `${courseName.replace(/[^a-zA-Z0-9_-]/g, '_')}_unidad_${unitNumber}.png`
+        const sectionBuffer = sectionCanvas.toBuffer('image/png')
+        const sectionBase64 = `data:image/png;base64,${sectionBuffer.toString('base64')}`
         
-        generatedImages.push({
-          type: 'unit',
-          unitNumber,
-          imageUrl: unitBase64,
-          filename: unitFilename
-        })
+        // Generar nombre de archivo
+        let filename: string
+        switch (sectionType) {
+          case 'presentation':
+            filename = `${courseName.replace(/[^a-zA-Z0-9_-]/g, '_')}_presentacion.png`
+            break
+          case 'evaluation':
+            filename = `${courseName.replace(/[^a-zA-Z0-9_-]/g, '_')}_evaluacion.png`
+            break
+          case 'unit':
+            filename = `${courseName.replace(/[^a-zA-Z0-9_-]/g, '_')}_unidad_${i}.png`
+            break
+        }
+        
+        const imageData: GenerateSetResponse['images'][0] = {
+          type: sectionType,
+          imageUrl: sectionBase64,
+          filename
+        }
+        
+        if (sectionType === 'unit' && unitNumber !== undefined) {
+          imageData.unitNumber = unitNumber
+        }
+        
+        generatedImages.push(imageData)
       }
       
-      // 3. Generar miniatura de evaluación
-      console.log('Generando evaluación...')
-      const evaluationConfig = createThumbnailConfig(
-        baseConfig,
-        'Módulo de Evaluación',
-        '' // Sin subtítulo
-      )
-      
-      const evaluationCanvas = createCanvas(baseConfig.width, baseConfig.height)
-      const evaluationCtx = evaluationCanvas.getContext('2d')
-      await drawThumbnail(evaluationCanvas, evaluationCtx, evaluationConfig)
-      
-      const evaluationBuffer = evaluationCanvas.toBuffer('image/png')
-      const evaluationBase64 = `data:image/png;base64,${evaluationBuffer.toString('base64')}`
-      const evaluationFilename = `${courseName.replace(/[^a-zA-Z0-9_-]/g, '_')}_evaluacion.png`
-      
-      generatedImages.push({
-        type: 'evaluation',
-        imageUrl: evaluationBase64,
-        filename: evaluationFilename
-      })
-      
-      console.log(`Generación completada: ${generatedImages.length} imágenes`)
+      console.log(`✅ Generación completada: ${generatedImages.length} imágenes`)
       
       const response: GenerateSetResponse = {
         success: true,

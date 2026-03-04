@@ -328,17 +328,23 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
     setUploadResults([]);
     
     try {
-      // Filtrar solo las imágenes de unidades (no presentación ni evaluación)
-      const unitImages = generatedSet.images.filter(img => img.type === 'unit');
+      // Subir TODAS las imágenes generadas, no solo las de unidades
+      const allImages = generatedSet.images;
       const results: MoodleUploadResult[] = [];
       
-      for (let index = 0; index < unitImages.length; index++) {
-        const image = unitImages[index];
+      console.log(`🚀 Iniciando subida de ${allImages.length} imágenes para ${selectedSections.length} secciones`);
+      
+      for (let index = 0; index < allImages.length && index < selectedSections.length; index++) {
+        const image = allImages[index];
         const section = selectedSections[index];
         
-        if (!section) continue;
+        if (!section) {
+          console.warn(`⚠️ No hay sección para imagen ${index + 1}`);
+          continue;
+        }
         
-        setUploadProgress(`Subiendo imagen ${index + 1} de ${unitImages.length}: ${section.name}`);
+        setUploadProgress(`Subiendo imagen ${index + 1} de ${allImages.length}: ${section.name}`);
+        console.log(`📤 Subiendo ${image.type} para sección "${section.name}" (ID: ${section.id})`);
         
         try {
           // Descargar la imagen generada como Blob
@@ -348,12 +354,15 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
           }
           
           const imageBlob = await response.blob();
+          console.log(`📦 Imagen descargada, tamaño: ${imageBlob.size} bytes`);
           
           // Crear FormData para el upload
           const formData = new FormData();
           formData.append('courseId', selectedCourse.id.toString());
-          formData.append('sectionId', section.id.toString()); // Convertir explícitamente a string
-          formData.append('image', imageBlob, `unidad_${image.unitNumber}_${section.name.replace(/\s+/g, '_')}.png`);
+          formData.append('sectionId', section.id.toString()); 
+          formData.append('image', imageBlob, `section_${section.id}_${Date.now()}.png`);
+          
+          console.log(`🔄 Enviando a API: courseId=${selectedCourse.id}, sectionId=${section.id}`);
           
           // Subir a Moodle
           const uploadResponse = await fetch('/api/update-grid-image', {
@@ -362,6 +371,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
           });
           
           const uploadResult = await uploadResponse.json();
+          console.log(`📋 Respuesta API para sección ${section.id}:`, uploadResult);
           
           if (uploadResponse.ok && uploadResult.success) {
             results.push({
@@ -371,16 +381,19 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
               filename: uploadResult.data?.filename,
               contenthash: uploadResult.data?.contenthash,
             });
+            console.log(`✅ Éxito para sección: ${section.name}`);
           } else {
+            const errorMsg = uploadResult.error || 'Error desconocido en la subida';
             results.push({
               sectionId: section.id,
               sectionName: section.name,
               success: false,
-              error: uploadResult.error || 'Error desconocido en la subida',
+              error: errorMsg,
             });
+            console.error(`❌ Error para sección ${section.name}:`, errorMsg);
           }
         } catch (error) {
-          console.error(`Error uploading to section ${section.name}:`, error);
+          console.error(`💥 Exception uploading to section ${section.name}:`, error);
           results.push({
             sectionId: section.id,
             sectionName: section.name,
@@ -389,9 +402,10 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
           });
         }
         
-        // Pequeña pausa entre uploads
-        if (index < unitImages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+        // Delay más largo entre uploads para evitar rate limiting
+        if (index < allImages.length - 1) {
+          console.log(`⏳ Esperando 1.5 segundos antes de la siguiente subida...`);
+          await new Promise(resolve => setTimeout(resolve, 1500));
         }
       }
       
@@ -585,16 +599,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
               )}
               
               <div className="space-y-3">
-                {/* Presentación */}
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div>
-                    <Badge variant="secondary">Presentación</Badge>
-                    <p className="font-semibold text-blue-800">Presentación del curso</p>
-                    <p className="text-sm text-blue-600">{courseName || 'Nombre del curso aquí'}</p>
-                  </div>
-                </div>
-
-                {/* Unidades */}
+                {/* Unidades basadas en secciones de Moodle */}
                 {moodleSections.length > 0 ? (
                   // Mostrar todas las secciones con checkboxes para seleccionar
                   moodleSections.map((section, index) => {
@@ -605,6 +610,33 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                       .slice(0, index + 1)
                       .filter(s => s.selected).length;
                     const displayUnitNumber = isSelected ? selectedUnitNumber : index + 1;
+                    
+                    // Determinar si es primera o última sección seleccionada
+                    const isFirstSelected = isSelected && selectedSections.findIndex(s => s.id === section.id) === 0;
+                    const isLastSelected = isSelected && selectedSections.findIndex(s => s.id === section.id) === selectedSections.length - 1;
+                    
+                    // Determinar el número de unidad intermedia (excluyendo primera y última)
+                    let intermediateUnitNumber = displayUnitNumber;
+                    if (isSelected && selectedSections.length > 2) {
+                      const sectionIndex = selectedSections.findIndex(s => s.id === section.id);
+                      if (sectionIndex > 0 && sectionIndex < selectedSections.length - 1) {
+                        intermediateUnitNumber = sectionIndex; // Unidad 1, 2, 3... para las intermedias
+                      }
+                    }
+                    
+                    // Determinar el nombre apropiado
+                    let sectionTitle = `Unidad ${displayUnitNumber}`;
+                    let sectionBadge = "Unidad";
+                    if (isFirstSelected) {
+                      sectionTitle = "Presentación del curso";
+                      sectionBadge = "Presentación";
+                    } else if (isLastSelected && selectedSections.length > 1) {
+                      sectionTitle = "Módulo de Evaluación";
+                      sectionBadge = "Evaluación";
+                    } else if (isSelected && selectedSections.length > 2) {
+                      sectionTitle = `Unidad ${intermediateUnitNumber}`;
+                      sectionBadge = "Unidad";
+                    }
                     
                     return (
                       <div
@@ -625,7 +657,10 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant={isSelected ? "default" : "secondary"}>
-                                Unidad {displayUnitNumber}
+                                {isSelected ? 
+                                  sectionBadge + (sectionBadge === "Unidad" ? ` ${intermediateUnitNumber}` : "") : 
+                                  `Unidad ${displayUnitNumber}`
+                                }
                               </Badge>
                               {!isSelected && (
                                 <Badge variant="outline" className="text-xs">
@@ -636,14 +671,18 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                             <p className={`font-semibold ${
                               isSelected ? 'text-green-800' : 'text-gray-500'
                             }`}>
-                              Unidad {displayUnitNumber}
+                              {isSelected ? sectionTitle : `Unidad ${displayUnitNumber}`}
                             </p>
                             <div className="mt-2">
                               {isSelected && selectedIndex >= 0 ? (
                                 <>
                                   <Input
                                     {...register(`units.${selectedIndex}.unitSubtitle`)}
-                                    placeholder={`Subtítulo para Unidad ${selectedUnitNumber}`}
+                                    placeholder={
+                                      isFirstSelected ? `Subtítulo para ${sectionTitle}` :
+                                      isLastSelected && selectedSections.length > 1 ? `Subtítulo para ${sectionTitle}` :
+                                      `Subtítulo para ${sectionTitle}`
+                                    }
                                     className="bg-white"
                                     key={`unit-input-${section.id}-${selectedIndex}`}
                                   />
@@ -717,14 +756,6 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                   </div>
                 )}
 
-                {/* Evaluación */}
-                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                  <div>
-                    <Badge variant="secondary">Evaluación</Badge>
-                    <p className="font-semibold text-orange-800">Módulo de Evaluación</p>
-                    <p className="text-sm text-orange-600">Sin subtítulo</p>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -738,13 +769,13 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
               {isGenerating ? (
                 <>
                   <span className="animate-spin mr-2">⏳</span>
-                  Generando {moodleSections.length > 0 ? selectedSections.length + 2 : fields.length + 2} miniaturas...
+                  Generando {moodleSections.length > 0 ? selectedSections.length : fields.length + 2} miniaturas...
                   <br />
                   <span className="text-xs opacity-75">Esto puede tomar unos segundos</span>
                 </>
               ) : (
                 <>
-                  Generar {moodleSections.length > 0 ? selectedSections.length + 2 : fields.length + 2} Miniaturas del Curso
+                  Generar {moodleSections.length > 0 ? selectedSections.length : fields.length + 2} Miniaturas del Curso
                 </>
               )}
             </Button>
