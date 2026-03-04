@@ -1,25 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { ThumbnailForm } from '@/components/thumbnail/ThumbnailForm';
+import { PresetManager } from '@/components/preset/PresetManager';
 import { ThumbnailPreview } from '@/components/thumbnail/ThumbnailPreview';
 import { CourseSetForm } from '@/components/course/CourseSetForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { DEFAULT_PRESETS } from '@/config/presets';
+import initialPresets from '@/config/presets.json';
 import type { ThumbnailConfig, GenerateSetResponse } from '@/types/thumbnail';
 
 export default function Home() {
-  const [config, setConfig] = useState<ThumbnailConfig>(DEFAULT_PRESETS[0].config);
-  const [activeTab, setActiveTab] = useState('individual');
-
-  const handlePresetSelect = (presetId: string) => {
-    const preset = DEFAULT_PRESETS.find(p => p.id === presetId);
-    if (preset) {
-      setConfig(preset.config);
-    }
-  };
+  const [config, setConfig] = useState<ThumbnailConfig>((initialPresets as any)[0].config);
+  const [activeTab, setActiveTab] = useState('presets');
 
   const handleConfigChange = (newConfig: ThumbnailConfig) => {
     setConfig(newConfig);
@@ -57,30 +50,29 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="individual" className="flex items-center gap-2">
-              Miniatura Individual
+            <TabsTrigger value="presets" className="flex items-center gap-2">
+              Gestor de Presets
             </TabsTrigger>
             <TabsTrigger value="course-set" className="flex items-center gap-2">
               Conjunto Completo de Curso
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="individual">
+          <TabsContent value="presets">
             <div className="grid gap-8 lg:grid-cols-2">
-              {/* Panel de Configuración */}
+              {/* Panel de Gestión de Presets */}
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Configuración Individual</CardTitle>
+                    <CardTitle>Gestión de Presets</CardTitle>
                     <CardDescription>
-                      Personaliza tu miniatura con control total sobre cada elemento
+                      Crea, edita y administra presets personalizados para tus miniaturas
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ThumbnailForm
+                    <PresetManager
                       config={config}
                       onChange={handleConfigChange}
-                      onPresetSelect={handlePresetSelect}
                     />
                   </CardContent>
                 </Card>
@@ -159,13 +151,13 @@ export default function Home() {
         <footer className="mt-16 pt-8 border-t">
           <div className="grid gap-8 md:grid-cols-3">
             <div>
-              <h3 className="font-semibold mb-3">Generador Individual</h3>
+              <h3 className="font-semibold mb-3">Gestor de Presets</h3>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>Control total sobre diseño</li>
+                <li>Crear presets personalizados</li>
+                <li>Editar presets existentes</li>
                 <li>Vista previa en tiempo real</li>
-                <li>3 presets predefinidos</li>
-                <li>Personalización completa</li>
-                <li>Descarga de alta calidad</li>
+                <li>Guardar/cargar automáticamente</li>
+                <li>Gestión completa CRUD</li>
               </ul>
             </div>
             

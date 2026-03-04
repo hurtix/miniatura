@@ -12,10 +12,11 @@ interface ThumbnailPreviewProps {
 export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewScale, setPreviewScale] = useState<1 | 2>(1); // 1x = 200x140, 2x = 400x280
 
   useEffect(() => {
     drawThumbnail();
-  }, [config]);
+  }, [config, previewScale]);
 
   const drawThumbnail = async () => {
     const canvas = canvasRef.current;
@@ -24,9 +25,23 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Configurar dimensiones de preview (como se verá en Moodle)
+    const moodleWidth = 200;
+    const moodleHeight = 140;
+    const previewWidth = moodleWidth * previewScale; // 200 o 400
+    const previewHeight = moodleHeight * previewScale; // 140 o 280
+    
+    // Factor de escala desde el tamaño real (600x420) al preview
+    const scaleX = previewWidth / config.width;
+    const scaleY = previewHeight / config.height;
+
     // Configurar canvas
-    canvas.width = config.width;
-    canvas.height = config.height;
+    canvas.width = previewWidth;
+    canvas.height = previewHeight;
+
+    // Aplicar transformación de escala
+    ctx.save();
+    ctx.scale(scaleX, scaleY);
 
     // Limpiar canvas
     ctx.clearRect(0, 0, config.width, config.height);
@@ -40,7 +55,7 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
         await new Promise<void>((resolve, reject) => {
           img.onload = () => {
             // Dibujar imagen de fondo ajustada al tamaño del canvas
-            ctx.globalAlpha = config.backgroundOpacity || 1;
+            ctx.globalAlpha = 1;
             ctx.drawImage(img, 0, 0, config.width, config.height);
             ctx.globalAlpha = 1;
             resolve();
@@ -97,9 +112,9 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
       ctx.globalAlpha = 1;
     }
 
-    // Calcular posición X según alineación
-    let titleX = (config.titlePosition.x / 100) * config.width;
-    let subtitleX = (config.subtitlePosition.x / 100) * config.width;
+    // Calcular posición X según alineación del título (subtítulo usa la misma)
+    let titleX = containerPadding;
+    let subtitleX = containerPadding;
     
     // Dibujar título
     ctx.fillStyle = config.titleColor;
@@ -108,12 +123,15 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     if (config.titlePosition.align === 'center') {
       ctx.textAlign = 'center';
       titleX = config.width / 2;
+      subtitleX = config.width / 2;
     } else if (config.titlePosition.align === 'right') {
       ctx.textAlign = 'right';
       titleX = config.width - containerPadding;
+      subtitleX = config.width - containerPadding;
     } else {
       ctx.textAlign = 'left';
       titleX = containerPadding;
+      subtitleX = containerPadding;
     }
     
     ctx.fillText(config.title, titleX, containerY);
@@ -121,19 +139,12 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     // Dibujar subtítulo (misma alineación que el título)
     ctx.fillStyle = config.subtitleColor;
     ctx.font = `${config.subtitleWeight} ${config.subtitleSize}px ${config.subtitleFont}`;
-    
-    if (config.subtitlePosition.align === 'center') {
-      ctx.textAlign = 'center';
-      subtitleX = config.width / 2;
-    } else if (config.subtitlePosition.align === 'right') {
-      ctx.textAlign = 'right';
-      subtitleX = config.width - containerPadding;
-    } else {
-      ctx.textAlign = 'left';
-      subtitleX = containerPadding;
-    }
+    // La alineación ya está configurada arriba
     
     ctx.fillText(config.subtitle, subtitleX, containerY + config.titleSize + textSpacing);
+
+    // Restaurar contexto de transformación
+    ctx.restore();
 
     // Generar URL de preview
     const dataUrl = canvas.toDataURL('image/png');
@@ -161,6 +172,11 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Regenerar imagen en resolución original para descarga
+    canvas.width = config.width;
+    canvas.height = config.height;
+    drawThumbnail(); // Esto actualizará el canvas con la imagen original
+
     const link = document.createElement('a');
     link.download = `miniatura-${Date.now()}.png`;
     link.href = canvas.toDataURL();
@@ -169,14 +185,55 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
 
   return (
     <div className={`flex flex-col space-y-4 ${className}`}>
-      <div className="relative border rounded-lg overflow-hidden bg-muted">
-        <canvas
-          ref={canvasRef}
-          className="max-w-full h-auto"
-          style={{
-            aspectRatio: `${config.width}/${config.height}`,
-          }}
-        />
+      {/* Preview con tamaños de Moodle */}
+      <div className="bg-white p-4 rounded-lg border">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">Vista Previa Moodle</h3>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setPreviewScale(1)} 
+              className={`px-3 py-1 text-sm rounded ${previewScale === 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              1x (200x140)
+            </button>
+            <button 
+              onClick={() => setPreviewScale(2)} 
+              className={`px-3 py-1 text-sm rounded ${previewScale === 2 ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            >
+              2x (400x280)
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center border border-gray-200 rounded p-4">
+          {previewUrl ? (
+            <img 
+              src={previewUrl} 
+              alt="Vista previa en tamaño Moodle"
+              style={{
+                width: 200 * previewScale,
+                height: 140 * previewScale,
+                objectFit: 'contain'
+              }}
+              className="rounded shadow-sm"
+            />
+          ) : (
+            <div 
+              className="border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400"
+              style={{
+                width: 200 * previewScale,
+                height: 140 * previewScale
+              }}
+            >
+              Sin configuración
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Canvas oculto para generar la imagen */}
+      <div className="hidden">
+        <canvas ref={canvasRef} />
       </div>
       
       <div className="flex gap-2">
@@ -188,7 +245,15 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
           Descargar PNG
         </Button>
         <Button
-          onClick={() => navigator.clipboard?.writeText(previewUrl)}
+          onClick={() => {
+            // Regenerar imagen en resolución original
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            canvas.width = config.width;
+            canvas.height = config.height;
+            drawThumbnail();
+            navigator.clipboard?.writeText(canvas.toDataURL());
+          }}
           variant="outline"
           size="sm"
         >

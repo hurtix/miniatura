@@ -1,0 +1,80 @@
+[
+  {
+    "id": "basica",
+    "name": "Básica",
+    "description": "Diseño profesional con fondo azul y texto blanco centrado",
+    "config": {
+      "title": "Título del Curso",
+      "subtitle": "Subtítulo descriptivo",
+      "backgroundImage": "/backgrounds/ia.jpg",
+      "overlayColor": "#1e40af",
+      "overlayOpacity": 0.7,
+      "titleColor": "#ffffff",
+      "titleSize": 48,
+      "titleFont": "Open Sans",
+      "titleWeight": 700,
+      "subtitleColor": "#e5e7eb",
+      "subtitleSize": 24,
+      "subtitleFont": "Open Sans",
+      "subtitleWeight": 400,
+      "titlePosition": { "y": 40, "align": "center" },
+      "titleBackground": "rgba(0, 0, 0, 0.3)",
+      "titleBackgroundOpacity": 0.7,
+      "subtitleBackground": "rgba(0, 0, 0, 0.2)",
+      "width": 600,
+      "height": 420
+    }
+  },
+  {
+    "id": "especifica",
+    "name": "Específica", 
+    "description": "Estilo educativo con colores verdes y layout estructurado",
+    "config": {
+      "title": "Curso Académico",
+      "subtitle": "Descripción del contenido",
+      "backgroundImage": "/backgrounds/ia.jpg",
+      "overlayColor": "#059669",
+      "overlayOpacity": 0.6,
+      "titleColor": "#ffffff",
+      "titleSize": 42,
+      "titleFont": "Open Sans",
+      "titleWeight": 600,
+      "subtitleColor": "#d1fae5",
+      "subtitleSize": 20,
+      "subtitleFont": "Open Sans",
+      "subtitleWeight": 400,
+      "titlePosition": { "y": 30, "align": "left" },
+      "titleBackground": "rgba(0, 0, 0, 0.4)",
+      "titleBackgroundOpacity": 0.8,
+      "subtitleBackground": "rgba(0, 0, 0, 0.3)",
+      "width": 600,
+      "height": 420
+    }
+  },
+  {
+    "id": "sociohumanistica",
+    "name": "Sociohumanística",
+    "description": "Diseño minimalista con gradiente y tipografía elegante",
+    "config": {
+      "title": "Curso Innovador",
+      "subtitle": "Aprendizaje del futuro",
+      "backgroundImage": "/backgrounds/ia.jpg",
+      "overlayColor": "#7c3aed",
+      "overlayOpacity": 0.5,
+      "titleColor": "#ffffff",
+      "titleSize": 52,
+      "titleFont": "Open Sans",
+      "titleWeight": 700,
+      "subtitleColor": "#c4b5fd",
+      "subtitleSize": 26,
+      "subtitleFont": "Open Sans",
+      "subtitleWeight": 300,
+      "titlePosition": { "y": 35, "align": "right" },
+      "titleBackground": "rgba(0, 0, 0, 0.25)",
+      "titleBackgroundOpacity": 0.6,
+      "subtitleBackground": "rgba(0, 0, 0, 0.15)",
+      "width": 600,
+      "height": 420
+    }
+  }
+]

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createCanvas, loadImage as nodeLoadImage, registerFont } from 'canvas'
 import path from 'path'
 import fs from 'fs'
-import type { ThumbnailConfig, CourseForm, GenerateSetResponse } from '@/types/thumbnail'
-import { DEFAULT_PRESETS } from '@/config/presets'
+import type { ThumbnailConfig, CourseForm, GenerateSetResponse, ThumbnailPreset } from '@/types/thumbnail'
+import initialPresets from '@/config/presets.json'
 
 // Registrar fuentes Open Sans
 try {
@@ -54,7 +54,7 @@ async function drawThumbnail(canvas: any, ctx: any, config: ThumbnailConfig) {
         const backgroundImg = await nodeLoadImage(imagePath)
         
         // Dibujar imagen de fondo ajustada al tamaño del canvas
-        ctx.globalAlpha = config.backgroundOpacity || 1
+        ctx.globalAlpha = 1
         ctx.drawImage(backgroundImg, 0, 0, width, height)
         ctx.globalAlpha = 1
       }
@@ -122,12 +122,12 @@ async function drawThumbnail(canvas: any, ctx: any, config: ThumbnailConfig) {
 
   // Dibujar subtítulo solo si existe
   if (config.subtitle && config.subtitle.trim()) {
-    // Calcular posición X según alineación del subtítulo
-    let subtitleX = containerPadding
-    if (config.subtitlePosition.align === 'center') {
-      ctx.textAlign = 'center'
-      subtitleX = width / 2
-    } else if (config.subtitlePosition.align === 'right') {
+// Calcular posición X según alineación del título (subtítulo usa la misma)
+  let subtitleX = containerPadding
+  if (config.titlePosition.align === 'center') {
+    ctx.textAlign = 'center'
+    subtitleX = width / 2
+  } else if (config.titlePosition.align === 'right') {
       ctx.textAlign = 'right'
       subtitleX = width - containerPadding
     } else {
@@ -171,10 +171,10 @@ function createThumbnailConfig(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { courseName, unitCount, preset, units } = body
+    const { courseName, unitCount, preset, presetConfig, units } = body
     
     console.log(`🔍 DEBUG: Preset solicitado: "${preset}"`);
-    console.log(`🔍 DEBUG: Presets disponibles:`, DEFAULT_PRESETS.map(p => p.id));
+    console.log(`🔍 DEBUG: Presets disponibles:`, (initialPresets as ThumbnailPreset[]).map(p => p.id));
     
     // Validación básica
     if (!courseName || !preset || !unitCount || unitCount < 1) {
@@ -184,17 +184,25 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Obtener preset base
-    const selectedPreset = DEFAULT_PRESETS.find(p => p.id === preset)
-    if (!selectedPreset) {
-      console.log(`❌ ERROR: Preset "${preset}" no encontrado`);
-      return NextResponse.json(
-        { success: false, error: 'Preset no encontrado', images: [] },
-        { status: 404 }
-      )
-    }
+    // Usar configuración enviada desde el frontend o buscar en presets iniciales
+    let baseConfig: ThumbnailConfig;
     
-    const baseConfig = selectedPreset.config
+    if (presetConfig) {
+      baseConfig = presetConfig;
+      console.log(`✅ SUCCESS: Usando configuración enviada para preset "${preset}"`);
+    } else {
+      // Fallback a presets iniciales
+      const selectedPreset = (initialPresets as ThumbnailPreset[]).find(p => p.id === preset);
+      if (!selectedPreset) {
+        console.log(`❌ ERROR: Preset "${preset}" no encontrado`);
+        return NextResponse.json(
+          { success: false, error: 'Preset no encontrado', images: [] },
+          { status: 404 }
+        )
+      }
+      baseConfig = selectedPreset.config;
+      console.log(`✅ SUCCESS: Preset "${preset}" encontrado en presets iniciales`);
+    }
     console.log(`✅ SUCCESS: Preset "${preset}" encontrado`);
     console.log(`📋 Preset seleccionado: ${preset}`);
     console.log(`📏 Configuración base - Título: ${baseConfig.titleSize}px, Subtítulo: ${baseConfig.subtitleSize}px`);

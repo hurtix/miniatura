@@ -7,7 +7,6 @@ export interface ThumbnailConfig {
   
   // Imagen de fondo
   backgroundImage: string | null; // URL de la imagen de fondo
-  backgroundOpacity: number; // Opacidad de la imagen (0-1)
   
   // Diseño 
   overlayColor: string;
@@ -26,13 +25,11 @@ export interface ThumbnailConfig {
   
   // Posicionamiento
   titlePosition: Position;
-  subtitlePosition: Position;
   
   // Fondo del texto 
   titleBackground: string;
   titleBackgroundOpacity: number;
   subtitleBackground: string;
-  subtitleBackgroundOpacity: number;
   
   // Dimensiones
   width: number;
@@ -57,7 +54,6 @@ export interface UnitConfig {
 }
 
 export interface Position {
-  x: number;
   y: number;
   align: 'left' | 'center' | 'right';
 }
@@ -65,7 +61,7 @@ export interface Position {
 export interface ThumbnailPreset {
   id: string;
   name: string;
-  description: string;
+  description?: string; // Ahora opcional
   config: ThumbnailConfig;
   thumbnail?: string; // Preview image URL
 }
@@ -80,6 +76,7 @@ export interface MoodleConfig {
 // Formulario de datos para conjunto completo
 export interface CourseForm {
   preset: string;
+  presetConfig?: ThumbnailConfig; // Configuración completa del preset
   units?: {
     unitSubtitle: string;
   }[];

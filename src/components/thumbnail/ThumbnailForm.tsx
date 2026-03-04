@@ -17,13 +17,12 @@ import { Badge } from '@/components/ui/badge';
 
 import { ColorPicker } from '@/components/ui/color-picker';
 import { ThumbnailConfig } from '@/types/thumbnail';
-import { DEFAULT_PRESETS } from '@/config/presets';
+import initialPresets from '@/config/presets.json';
 
 const configSchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
   subtitle: z.string().min(1, 'El subtítulo es requerido'),
   backgroundImage: z.string().nullable().optional(),
-  backgroundOpacity: z.number().min(0).max(1).optional(),
   overlayColor: z.string(),
   overlayOpacity: z.number().min(0).max(1),
   titleColor: z.string(),
@@ -49,7 +48,6 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
       title: config.title,
       subtitle: config.subtitle,
       backgroundImage: config.backgroundImage,
-      backgroundOpacity: config.backgroundOpacity || 1,
       overlayColor: config.overlayColor,
       overlayOpacity: config.overlayOpacity,
       titleColor: config.titleColor,
@@ -95,7 +93,7 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {DEFAULT_PRESETS.map((preset) => (
+            {(initialPresets as any).map((preset: any) => (
               <div
                 key={preset.id}
                 onClick={() => onPresetSelect(preset.id)}
@@ -189,19 +187,6 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
                   </Select>
                 </div>
 
-                {config.backgroundImage && (
-                  <div className="space-y-2">
-                    <Label>Opacidad de Imagen: {Math.round((config.backgroundOpacity || 1) * 100)}%</Label>
-                    <Slider
-                      value={[config.backgroundOpacity || 1]}
-                      onValueChange={(values) => handleFieldChange('backgroundOpacity', values[0])}
-                      max={1}
-                      min={0}
-                      step={0.05}
-                      className="py-4"
-                    />
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <Label>Color de Overlay</Label>
@@ -334,17 +319,6 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Posición X: {config.titlePosition.x}%</Label>
-                  <Slider
-                    value={[config.titlePosition.x]}
-                    onValueChange={(values) => handlePositionChange('title', 'x', values[0])}
-                    max={100}
-                    min={0}
-                    step={1}
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label>Posición Y: {config.titlePosition.y}%</Label>
                   <Slider
                     value={[config.titlePosition.y]}
@@ -360,53 +334,6 @@ export function ThumbnailForm({ config, onChange, onPresetSelect }: ThumbnailFor
                   <Select 
                     value={config.titlePosition.align}
                     onValueChange={(value: 'left' | 'center' | 'right') => handleAlignChange('title', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Izquierda</SelectItem>
-                      <SelectItem value="center">Centro</SelectItem>
-                      <SelectItem value="right">Derecha</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Posición del Subtítulo */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Posición del Subtítulo</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Posición X: {config.subtitlePosition.x}%</Label>
-                  <Slider
-                    value={[config.subtitlePosition.x]}
-                    onValueChange={(values) => handlePositionChange('subtitle', 'x', values[0])}
-                    max={100}
-                    min={0}
-                    step={1}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Posición Y: {config.subtitlePosition.y}%</Label>
-                  <Slider
-                    value={[config.subtitlePosition.y]}
-                    onValueChange={(values) => handlePositionChange('subtitle', 'y', values[0])}
-                    max={100}
-                    min={0}
-                    step={1}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Alineación</Label>
-                  <Select 
-                    value={config.subtitlePosition.align}
-                    onValueChange={(value: 'left' | 'center' | 'right') => handleAlignChange('subtitle', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />

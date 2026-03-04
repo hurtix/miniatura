@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         const backgroundImg = await loadImage(imagePath);
         
         // Dibujar imagen de fondo ajustada al tamaño del canvas
-        ctx.globalAlpha = config.backgroundOpacity || 1;
+        ctx.globalAlpha = 1;
         ctx.drawImage(backgroundImg, 0, 0, config.width, config.height);
         ctx.globalAlpha = 1;
       } catch (error) {
@@ -117,12 +117,12 @@ export async function POST(request: NextRequest) {
     ctx.font = titleFontString;
     ctx.fillText(config.title, titleX, containerY);
 
-    // Calcular posición X según alineación del subtítulo
+    // Calcular posición X según alineación del título (subtítulo usa la misma)
     let subtitleX = containerPadding;
-    if (config.subtitlePosition.align === 'center') {
+    if (config.titlePosition.align === 'center') {
       ctx.textAlign = 'center';
       subtitleX = config.width / 2;
-    } else if (config.subtitlePosition.align === 'right') {
+    } else if (config.titlePosition.align === 'right') {
       ctx.textAlign = 'right';
       subtitleX = config.width - containerPadding;
     } else {

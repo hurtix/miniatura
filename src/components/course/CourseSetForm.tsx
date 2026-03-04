@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CourseCombobox } from '@/components/ui/course-combobox';
-import { DEFAULT_PRESETS } from '@/config/presets';
-import type { CourseForm, GenerateSetResponse } from '@/types/thumbnail';
+import initialPresets from '@/config/presets.json';
+import type { CourseForm, GenerateSetResponse, ThumbnailPreset } from '@/types/thumbnail';
 
 // Esquema de validación simplificado - courseName ahora se llena automáticamente
 const courseFormSchema = z.object({
@@ -69,6 +69,7 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
   const [moodleSections, setMoodleSections] = useState<MoodleSection[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<SelectedCourse | null>(null);
   const [moodleError, setMoodleError] = useState<string>('');
+  const [availablePresets, setAvailablePresets] = useState<ThumbnailPreset[]>([]);
   
   // Estados para la subida a Moodle
   const [isUploading, setIsUploading] = useState(false);
@@ -97,6 +98,22 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
 
   // Solo mostrar cuando hay secciones de Moodle seleccionadas
   const selectedSections = moodleSections.filter(s => s.selected);
+
+  // Cargar presets desde localStorage
+  useEffect(() => {
+    const savedPresets = localStorage.getItem('allPresets');
+    if (savedPresets) {
+      try {
+        const allPresets = JSON.parse(savedPresets);
+        setAvailablePresets(allPresets);
+      } catch (error) {
+        console.error('Error loading presets:', error);
+        setAvailablePresets(initialPresets as ThumbnailPreset[]);
+      }
+    } else {
+      setAvailablePresets(initialPresets as ThumbnailPreset[]);
+    }
+  }, []);
 
   // Cargar secciones desde Moodle cuando se selecciona un curso
   const loadMoodleSections = async (course: SelectedCourse) => {
@@ -198,12 +215,20 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
       return;
     }
 
+    // Encontrar el preset completo
+    const selectedPreset = availablePresets.find(p => p.id === data.preset);
+    if (!selectedPreset) {
+      setMoodleError('Preset seleccionado no encontrado');
+      return;
+    }
+
     setIsGenerating(true);
     setGeneratedSet(null);
     
     try {
       const requestData = {
         ...data,
+        presetConfig: selectedPreset.config, // Enviar configuración completa
         courseName: selectedCourse?.fullname || 'Curso de Moodle',
         unitCount: selectedSections.length,
         units: selectedSections.map((section, index) => ({
@@ -395,9 +420,9 @@ export function CourseSetForm({ onGenerate }: CourseSetFormProps) {
                   <SelectValue placeholder="Selecciona un preset" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DEFAULT_PRESETS.map((preset) => (
+                  {availablePresets.map((preset) => (
                     <SelectItem key={preset.id} value={preset.id}>
-                      {preset.name} - {preset.description}
+                      {preset.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
