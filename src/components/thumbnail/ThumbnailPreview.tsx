@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ThumbnailConfig } from '@/types/thumbnail';
 import { Button } from '@/components/ui/button';
-import { Clipboard, ClipboardCopyIcon, Copy, Download } from 'lucide-react';
+import { Clipboard, ClipboardCopyIcon, Copy, Download, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface ThumbnailPreviewProps {
   config: ThumbnailConfig;
@@ -189,29 +189,31 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
       {/* Preview con tamaños de Moodle */}
       <div className="bg-muted p-8 rounded-none">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold">Vista Previa Moodle</h3>
+          <h3 className="text-sm font-semibold">Moodle Grid Style</h3>
           <div className="flex gap-0">
             <Button 
               onClick={() => setPreviewScale(1)} 
               variant={previewScale === 1 ? "default" : "outline"}
-              size="sm"
-              className='rounded-tr-none rounded-br-none'
+              size="icon-xs"
+              className='rounded-tr-none rounded-br-none px-4'
             >
-              1X
+              <ZoomOut className='size-4' />
             </Button>
             <Button 
               onClick={() => setPreviewScale(2)} 
               variant={previewScale === 2 ? "default" : "outline"}
-              size="sm"
-              className='rounded-tl-none rounded-bl-none'
+              size="icon-xs"
+              className='rounded-tl-none rounded-bl-none px-4'
             >
-              2X
+              <ZoomIn className='size-4' />
             </Button>
           </div>
         </div>
         
         <div className="flex items-center justify-center bg-white border border-gray-200 rounded p-4">
           {previewUrl ? (
+            <div className='border rounded-md bg-muted shadow-sm overflow-hidden'>
+              <p className='px-4 py-1.5 text-sm text-blue-600'>Presentación del curso</p>
             <img 
               src={previewUrl} 
               alt="Vista previa en tamaño Moodle"
@@ -220,8 +222,9 @@ export function ThumbnailPreview({ config, className = '' }: ThumbnailPreviewPro
                 height: 140 * previewScale,
                 objectFit: 'contain'
               }}
-              className="rounded shadow-sm"
+              className=""
             />
+            </div>
           ) : (
             <div 
               className="border border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400"

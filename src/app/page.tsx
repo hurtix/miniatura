@@ -34,13 +34,13 @@ export default function Home() {
                 Generador de Miniaturas para Moodle
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
-                Crea miniaturas profesionales para tus cursos - individual o conjuntos completos
+                Crea miniaturas en lote para tus cursos de Moodle de forma rápida y personalizada
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">v2.0</Badge>
               <Badge variant="outline">Next.js</Badge>
-              <Badge variant="outline">Conjuntos</Badge>
+              <Badge variant="outline">REST API</Badge>
             </div>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function Home() {
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Vista Previa en Tiempo Real</CardTitle>
+                    <CardTitle>RT Preview</CardTitle>
                     <CardDescription>
                       Los cambios se reflejan instantáneamente
                     </CardDescription>
